@@ -2,5 +2,13 @@
 name = "omni-exporter"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+authors = ["Douglas Su <doug.su.au@gmail.com>"]
+repository = "https://github.com/d0u9/omni-exporter"
+homepage = "https://github.com/d0u9/omni-exporter"
+readme = "README.md"
+description = """
+An exporter built for resource-constrained systems.
+"""
 
 [dependencies]
