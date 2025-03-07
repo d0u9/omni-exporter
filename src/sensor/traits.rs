@@ -1,3 +1,5 @@
+use crate::types::SensorData;
+
 pub trait Sensor: Sync + Send {
     fn name(&self) -> &str;
 }
@@ -5,5 +7,5 @@ pub trait Sensor: Sync + Send {
 pub trait SensorReader: Sync + Send + 'static {
     fn name(&self) -> &str;
     fn id(&self) -> &str;
-    fn read(&self) -> String;
+    fn read(&self) -> SensorData;
 }

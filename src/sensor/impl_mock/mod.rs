@@ -1,5 +1,5 @@
 use crate::sensor::SensorReader;
-
+use crate::types::SensorData;
 pub struct MockSensor {}
 
 impl MockSensor {
@@ -35,7 +35,7 @@ impl SensorReader for MockSensorReader {
         &self.id
     }
 
-    fn read(&self) -> String {
-        "Hello, World!".to_string()
+    fn read(&self) -> SensorData {
+        SensorData {}
     }
 }
