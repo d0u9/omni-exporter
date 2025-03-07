@@ -1,3 +1,6 @@
+use omni_exporter::exporter::Exporter;
+use omni_exporter::exporter::SimpleExporter;
+
 fn env_setup() {
     env_logger::init();
 }
@@ -6,6 +9,8 @@ fn env_setup() {
 async fn main_test() {
     env_setup();
 
-    let result = omni_exporter::say_hello("World");
-    assert_eq!(result, "Hello, World!");
+    let exporter = SimpleExporter::new();
+    let result = exporter.scrape().await;
+
+    log::info!("result: {:?}", result);
 }
