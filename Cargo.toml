@@ -12,3 +12,8 @@ An exporter built for resource-constrained systems.
 """
 
 [dependencies]
+log = { version = "0.4" }
+tokio = { version = "1", features = ["rt", "macros"] }
+
+[dev-dependencies]
+env_logger = "0.11"
