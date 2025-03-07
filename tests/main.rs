@@ -1,5 +1,7 @@
+use omni_exporter::exporter::Collector;
 use omni_exporter::exporter::Exporter;
 use omni_exporter::exporter::SimpleExporter;
+use omni_exporter::sensor::MockSensor;
 
 fn env_setup() {
     env_logger::init();
@@ -9,7 +11,12 @@ fn env_setup() {
 async fn main_test() {
     env_setup();
 
-    let exporter = SimpleExporter::new();
+    let mock_sensor = MockSensor::new();
+    let mock_sensor_reader = mock_sensor.get_reader();
+
+    let mut exporter = SimpleExporter::new();
+    exporter.add_sensor(mock_sensor_reader);
+
     let result = exporter.scrape().await;
 
     log::info!("result: {:?}", result);

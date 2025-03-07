@@ -2,6 +2,7 @@ mod impl_simple;
 pub use impl_simple::Simple as SimpleExporter;
 
 mod traits;
+pub use traits::Collector;
 pub use traits::Exporter;
 
 mod error;
