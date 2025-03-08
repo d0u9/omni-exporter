@@ -1,5 +1,8 @@
+use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
-use crate::types::SensorData;
+use crate::sensor::data::OwnedSensorData;
+use std::marker::PhantomData;
+
 pub struct MockSensor {}
 
 impl MockSensor {
@@ -7,26 +10,30 @@ impl MockSensor {
         Self {}
     }
 
-    pub fn get_reader(&self) -> MockSensorReader {
-        MockSensorReader::new()
+    pub fn get_reader<T: SensorData>(&self) -> MockSensorReader<T> {
+        MockSensorReader::<T>::new()
     }
 }
 
-pub struct MockSensorReader {
+pub struct MockSensorReader<T: SensorData> {
     name: String,
     id: String,
+    _phantom: PhantomData<T>,
 }
 
-impl MockSensorReader {
+impl<T: SensorData> MockSensorReader<T> {
     pub fn new() -> Self {
         Self {
             name: "MockSensor".to_string(),
             id: "1234567890".to_string(),
+            _phantom: PhantomData,
         }
     }
 }
 
-impl SensorReader for MockSensorReader {
+impl<T: SensorData> SensorReader for MockSensorReader<T> {
+    type Data = T;
+
     fn name(&self) -> &str {
         &self.name
     }
@@ -35,7 +42,7 @@ impl SensorReader for MockSensorReader {
         &self.id
     }
 
-    fn read(&self) -> SensorData {
-        SensorData {}
+    fn read(&self) -> Self::Data {
+        T::from_str("1234567890")
     }
 }

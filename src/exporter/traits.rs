@@ -1,5 +1,6 @@
 use std::future::Future;
 
+use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
 
 use super::ExporterResult;
@@ -11,6 +12,6 @@ pub trait Exporter {
     fn scrape(&self) -> impl Future<Output = ExporterResult<Self::Chips>> + Send;
 }
 
-pub trait Collector {
-    fn add_sensor<T: SensorReader + Send + 'static>(&mut self, sensor: T);
+pub trait Collector<D: SensorData> {
+    fn add_sensor<T: SensorReader<Data = D> + Send + 'static>(&mut self, sensor: T);
 }

@@ -3,42 +3,46 @@ use std::collections::HashMap;
 use super::ExporterResult;
 use super::traits::Collector;
 use super::traits::Exporter;
+use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
-use crate::types::SensorData;
 
 // SimpleExporter schedules grabing data from sensors synchronously.
 // Each time the scrape() method is called, it will read data from all sensors and return the result.
-pub struct Simple {
-    sensors: HashMap<String, Box<dyn SensorReader>>,
+pub struct Simple<D: SensorData> {
+    sensors: HashMap<String, Box<dyn SensorReader<Data = D>>>,
 }
 
-impl Simple {
+impl<D: SensorData + 'static> Simple<D> {
     pub fn new() -> Self {
         Self {
             sensors: HashMap::new(),
         }
     }
 
-    pub async fn do_scrape(&self) -> ExporterResult<Vec<SensorData>> {
-        let mut result = Vec::new();
+    pub async fn do_scrape(&self) -> ExporterResult<String> {
+        let mut result = String::new();
         for sensor in self.sensors.values() {
-            result.push(sensor.read());
+            let data = sensor.read();
+            result.push_str(data.name());
         }
         Ok(result)
     }
 }
 
-impl Exporter for Simple {
-    type Chips = Vec<SensorData>;
+impl<D: SensorData + 'static> Exporter for Simple<D> {
+    type Chips = String;
 
     async fn scrape(&self) -> ExporterResult<Self::Chips> {
         self.do_scrape().await
     }
 }
 
-impl Collector for Simple {
-    fn add_sensor<T: SensorReader + Send + Sync + Sized>(&mut self, sensor: T) {
+impl<D: SensorData + 'static> Collector<D> for Simple<D> {
+    fn add_sensor<T>(&mut self, sensor_reader: T)
+    where
+        T: SensorReader<Data = D> + Send + Sync + Sized,
+    {
         self.sensors
-            .insert(sensor.name().to_string(), Box::new(sensor));
+            .insert(sensor_reader.name().to_string(), Box::new(sensor_reader));
     }
 }
