@@ -1,29 +1,34 @@
-use super::SensorData;
 use std::marker::PhantomData;
 
-pub struct OwnedSensorData<T> {
+use super::SensorData;
+
+use crate::protocol::Protocol;
+use crate::protocol::plain;
+
+#[derive(Debug)]
+pub struct OwnedSensorData {
     data: String,
-    _phantom: PhantomData<T>,
 }
 
-impl<T: Sized + Send + Sync + 'static> OwnedSensorData<T> {
+impl OwnedSensorData {
     pub fn new() -> Self {
         Self {
-            data: "".to_string(),
-            _phantom: PhantomData,
+            data: "xxx".to_string(),
         }
     }
 }
 
-impl<T: Sized + Send + Sync + 'static> SensorData for OwnedSensorData<T> {
+impl SensorData for OwnedSensorData {
     fn name(&self) -> &str {
         "OwnedSensorData"
     }
 
-    fn from_str(s: &str) -> Self {
+    fn from_proto<P>(proto: P) -> Self
+    where
+        P: Protocol + Send + Sync + 'static,
+    {
         Self {
-            data: s.to_string(),
-            _phantom: PhantomData,
+            data: proto.get_item().to_string(),
         }
     }
 }

@@ -1,3 +1,7 @@
+use std::fmt::Debug;
+
+use crate::protocol::Protocol;
+
 pub trait Sensor: Sync + Send {
     fn name(&self) -> &str;
 }
@@ -10,7 +14,9 @@ pub trait SensorReader: Sync + Send + 'static {
     fn read(&self) -> Self::Data;
 }
 
-pub trait SensorData: Sync + Send + 'static {
+pub trait SensorData: Sync + Send + Debug + 'static {
     fn name(&self) -> &str;
-    fn from_str(s: &str) -> Self;
+    fn from_proto<P>(proto: P) -> Self
+    where
+        P: Protocol + Send + Sync + 'static;
 }

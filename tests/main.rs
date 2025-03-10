@@ -13,7 +13,7 @@ async fn main_test() {
     env_setup();
 
     let mock_sensor = MockSensor::new();
-    let mock_sensor_reader = mock_sensor.get_reader::<OwnedSensorData<String>>();
+    let mock_sensor_reader = mock_sensor.get_reader::<OwnedSensorData>();
 
     let mut exporter = SimpleExporter::new();
     exporter.add_sensor(mock_sensor_reader);

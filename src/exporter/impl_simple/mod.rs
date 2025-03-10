@@ -23,6 +23,7 @@ impl<D: SensorData + 'static> Simple<D> {
         let mut result = String::new();
         for sensor in self.sensors.values() {
             let data = sensor.read();
+            dbg!(&data);
             result.push_str(data.name());
         }
         Ok(result)
