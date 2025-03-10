@@ -1,18 +1,11 @@
-use crate::protocol::Protocol;
+use crate::protocol::ProtocolGetter;
 
 use super::SensorData;
 
 #[derive(Debug)]
 pub struct OwnedSensorData {
+    metric_name: String,
     data: String,
-}
-
-impl OwnedSensorData {
-    pub fn new() -> Self {
-        Self {
-            data: "xxx".to_string(),
-        }
-    }
 }
 
 impl SensorData for OwnedSensorData {
@@ -22,10 +15,13 @@ impl SensorData for OwnedSensorData {
 
     fn from_proto<P>(proto: P) -> Self
     where
-        P: Protocol + Send + Sync + 'static,
+        P: ProtocolGetter + Send + Sync + 'static,
     {
         Self {
-            data: proto.get_item().to_string(),
+            metric_name: proto.metric_name().to_string(),
+            data: proto
+                .value::<String>()
+                .expect("Failed to get value from protocol"),
         }
     }
 }

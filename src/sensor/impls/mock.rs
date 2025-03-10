@@ -1,10 +1,11 @@
-use std::future::Future;
 use std::marker::PhantomData;
-use std::pin::Pin;
+
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use crate::exotic::sysinfo::System;
 use crate::exotic::uuid;
-use crate::protocol::Protocol;
+use crate::protocol::ProtocolSetter;
 use crate::protocol::plain::Plain;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
@@ -12,13 +13,26 @@ use async_trait::async_trait;
 
 const MOCK_SENSOR_NAME: &str = "MockSensor";
 
-pub struct SensorImpl {
+pub struct SensorInner {
     sys: System,
+}
+
+impl SensorInner {
+    fn new() -> Self {
+        Self { sys: System::new() }
+    }
+}
+
+pub struct SensorImpl {
+    inner: Arc<RwLock<SensorInner>>,
 }
 
 impl SensorImpl {
     pub fn new() -> Self {
-        Self { sys: System::new() }
+        let inner = SensorInner::new();
+        Self {
+            inner: Arc::new(RwLock::new(inner)),
+        }
     }
 
     pub fn get_reader<T: SensorData>(&self) -> SensorReaderImpl<T> {
@@ -60,7 +74,8 @@ where
 
     async fn read(&self) -> Self::Data {
         let mut plain_proto = Plain::new();
-        plain_proto.add_item("hello, from palin proto");
+        plain_proto.metric_name("null_metric");
+        plain_proto.value("null_value");
         Self::Data::from_proto(plain_proto)
     }
 }

@@ -1,4 +1,5 @@
 mod traits;
-pub use traits::Protocol;
+pub use traits::ProtocolGetter;
+pub use traits::ProtocolSetter;
 
 pub mod plain;
