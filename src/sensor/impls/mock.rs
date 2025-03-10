@@ -8,6 +8,7 @@ use crate::protocol::Protocol;
 use crate::protocol::plain::Plain;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
+use async_trait::async_trait;
 
 const MOCK_SENSOR_NAME: &str = "MockSensor";
 
@@ -42,6 +43,7 @@ impl<T> SensorReaderImpl<T> {
     }
 }
 
+#[async_trait]
 impl<T> SensorReader for SensorReaderImpl<T>
 where
     T: SensorData + Send + Sync + 'static,
@@ -56,12 +58,10 @@ where
         &self.id
     }
 
-    fn read(&self) -> Pin<Box<dyn Future<Output = Self::Data> + Send + '_>> {
-        Box::pin(async move {
-            let mut plain_proto = Plain::new();
-            plain_proto.add_item("hello, from palin proto");
-            Self::Data::from_proto(plain_proto)
-        })
+    async fn read(&self) -> Self::Data {
+        let mut plain_proto = Plain::new();
+        plain_proto.add_item("hello, from palin proto");
+        Self::Data::from_proto(plain_proto)
     }
 }
 

@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use std::fmt::Debug;
 use std::future::Future;
 use std::pin::Pin;
@@ -8,13 +9,14 @@ pub trait Sensor: Sync + Send {
     fn name(&self) -> &str;
 }
 
+#[async_trait]
 pub trait SensorReader: Sync + Send + 'static {
     type Data: SensorData;
 
     fn name(&self) -> &str;
     fn id(&self) -> &str;
 
-    fn read(&self) -> Pin<Box<dyn Future<Output = Self::Data> + Send + '_>>;
+    async fn read(&self) -> Self::Data;
 }
 
 pub trait SensorData: Sync + Send + Debug + 'static {
