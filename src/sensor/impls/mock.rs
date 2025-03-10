@@ -1,15 +1,21 @@
 use std::marker::PhantomData;
 
+use crate::exotic::sysinfo::System;
+use crate::exotic::uuid;
 use crate::protocol::Protocol;
 use crate::protocol::plain::Plain;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
 
-pub struct SensorImpl {}
+const MOCK_SENSOR_NAME: &str = "MockSensor";
+
+pub struct SensorImpl {
+    sys: System,
+}
 
 impl SensorImpl {
     pub fn new() -> Self {
-        Self {}
+        Self { sys: System::new() }
     }
 
     pub fn get_reader<T: SensorData>(&self) -> SensorReaderImpl<T> {
@@ -17,8 +23,9 @@ impl SensorImpl {
     }
 }
 
+// T is a type that implements SensorData
 pub struct SensorReaderImpl<T> {
-    name: String,
+    name: &'static str,
     id: String,
     _phantom: PhantomData<T>,
 }
@@ -26,8 +33,8 @@ pub struct SensorReaderImpl<T> {
 impl<T> SensorReaderImpl<T> {
     pub fn new() -> Self {
         Self {
-            name: "MockSensor".to_string(),
-            id: "1234567890".to_string(),
+            name: MOCK_SENSOR_NAME,
+            id: uuid::new(),
             _phantom: PhantomData,
         }
     }
@@ -51,5 +58,22 @@ where
         let mut plain_proto = Plain::new();
         plain_proto.add_item("hello, from palin proto");
         Self::Data::from_proto(plain_proto)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::sensor::data::OwnedSensorData;
+
+    #[test]
+    fn test_sensor_reader() {
+        let sensor = SensorImpl::new();
+        let reader = sensor.get_reader::<OwnedSensorData>();
+
+        assert_eq!(reader.name(), MOCK_SENSOR_NAME);
+
+        let data = reader.read();
+        assert_eq!(data.name(), "OwnedSensorData");
     }
 }
