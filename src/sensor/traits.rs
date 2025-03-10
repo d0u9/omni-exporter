@@ -1,4 +1,6 @@
 use std::fmt::Debug;
+use std::future::Future;
+use std::pin::Pin;
 
 use crate::protocol::Protocol;
 
@@ -11,7 +13,8 @@ pub trait SensorReader: Sync + Send + 'static {
 
     fn name(&self) -> &str;
     fn id(&self) -> &str;
-    fn read(&self) -> Self::Data;
+
+    fn read(&self) -> Pin<Box<dyn Future<Output = Self::Data> + Send + '_>>;
 }
 
 pub trait SensorData: Sync + Send + Debug + 'static {

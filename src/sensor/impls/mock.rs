@@ -1,4 +1,6 @@
+use std::future::Future;
 use std::marker::PhantomData;
+use std::pin::Pin;
 
 use crate::exotic::sysinfo::System;
 use crate::exotic::uuid;
@@ -54,10 +56,12 @@ where
         &self.id
     }
 
-    fn read(&self) -> Self::Data {
-        let mut plain_proto = Plain::new();
-        plain_proto.add_item("hello, from palin proto");
-        Self::Data::from_proto(plain_proto)
+    fn read(&self) -> Pin<Box<dyn Future<Output = Self::Data> + Send + '_>> {
+        Box::pin(async move {
+            let mut plain_proto = Plain::new();
+            plain_proto.add_item("hello, from palin proto");
+            Self::Data::from_proto(plain_proto)
+        })
     }
 }
 
@@ -66,14 +70,14 @@ mod tests {
     use super::*;
     use crate::sensor::data::OwnedSensorData;
 
-    #[test]
-    fn test_sensor_reader() {
+    #[tokio::test]
+    async fn test_sensor_reader() {
         let sensor = SensorImpl::new();
         let reader = sensor.get_reader::<OwnedSensorData>();
 
         assert_eq!(reader.name(), MOCK_SENSOR_NAME);
 
-        let data = reader.read();
+        let data = reader.read().await;
         assert_eq!(data.name(), "OwnedSensorData");
     }
 }

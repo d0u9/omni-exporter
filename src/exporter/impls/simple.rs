@@ -22,7 +22,7 @@ impl<D: SensorData + 'static> Simple<D> {
     pub async fn do_scrape(&self) -> ExporterResult<String> {
         let mut result = String::new();
         for sensor in self.sensors.values() {
-            let data = sensor.read();
+            let data = sensor.read().await;
             dbg!(&data);
             result.push_str(data.name());
         }
