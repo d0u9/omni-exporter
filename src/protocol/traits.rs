@@ -1,21 +1,22 @@
-use std::convert::From;
-use std::convert::Into;
+use crate::error::Result;
 
 // https://prometheus.io/docs/instrumenting/exposition_formats/#comments-help-text-and-type-information
 
+#[derive(Debug, Clone, Copy)]
+pub enum ProtocolValue {
+    None,
+    F64(f64),
+    U64(u64),
+}
+
 pub trait ProtocolGetter {
-    type Cell;
-
-    fn metric_name(&self) -> &str;
-
-    fn label<T: From<Self::Cell>>(&self, key: &str) -> Option<T>;
-    fn value<T: From<Self::Cell>>(&self) -> Option<T>;
+    fn get_metric_name(&self) -> &str;
+    fn get_labels(&self) -> impl Iterator<Item = (&str, &str)>;
+    fn get_value(&self) -> Result<ProtocolValue>;
 }
 
 pub trait ProtocolSetter {
-    type Cell;
-
-    fn metric_name(&mut self, name: &str);
-    fn label<T: Into<Self::Cell>>(&mut self, key: &str, value: T);
-    fn value<T: Into<Self::Cell>>(&mut self, value: T);
+    fn set_metric_name(&mut self, name: &str);
+    fn set_labels(&mut self, key: &str, value: &str);
+    fn set_value(&mut self, value: ProtocolValue);
 }

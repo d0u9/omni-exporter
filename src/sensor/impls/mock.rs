@@ -1,11 +1,10 @@
 use std::marker::PhantomData;
 
-use std::sync::Arc;
-use tokio::sync::RwLock;
-
+use crate::error::Result;
 use crate::exotic::sysinfo::System;
 use crate::exotic::uuid;
 use crate::protocol::ProtocolSetter;
+use crate::protocol::ProtocolValue;
 use crate::protocol::plain::Plain;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
@@ -13,30 +12,17 @@ use async_trait::async_trait;
 
 const MOCK_SENSOR_NAME: &str = "MockSensor";
 
-pub struct SensorInner {
-    sys: System,
-}
-
-impl SensorInner {
-    fn new() -> Self {
-        Self { sys: System::new() }
-    }
-}
-
 pub struct SensorImpl {
-    inner: Arc<RwLock<SensorInner>>,
+    sys: System,
 }
 
 impl SensorImpl {
     pub fn new() -> Self {
-        let inner = SensorInner::new();
-        Self {
-            inner: Arc::new(RwLock::new(inner)),
-        }
+        Self { sys: System::new() }
     }
 
     pub fn get_reader<T: SensorData>(&self) -> SensorReaderImpl<T> {
-        SensorReaderImpl::new()
+        SensorReaderImpl::new_with_sysinfo(self.sys.clone())
     }
 }
 
@@ -44,14 +30,16 @@ impl SensorImpl {
 pub struct SensorReaderImpl<T> {
     name: &'static str,
     id: String,
+    sys: System,
     _phantom: PhantomData<T>,
 }
 
 impl<T> SensorReaderImpl<T> {
-    pub fn new() -> Self {
+    pub fn new_with_sysinfo(sys: System) -> Self {
         Self {
             name: MOCK_SENSOR_NAME,
             id: uuid::new(),
+            sys,
             _phantom: PhantomData,
         }
     }
@@ -72,11 +60,15 @@ where
         &self.id
     }
 
-    async fn read(&self) -> Self::Data {
+    async fn read(&self) -> Result<Vec<Self::Data>> {
+        let sys = self.sys.free_memory().await;
+
         let mut plain_proto = Plain::new();
-        plain_proto.metric_name("null_metric");
-        plain_proto.value("null_value");
-        Self::Data::from_proto(plain_proto)
+        plain_proto.set_metric_name("null_metric");
+        plain_proto.set_value(ProtocolValue::U64(sys));
+        plain_proto.set_labels("key1", "value1");
+        plain_proto.set_labels("key2", "value2");
+        Ok(vec![Self::Data::from_proto(plain_proto).unwrap()])
     }
 }
 
@@ -84,6 +76,7 @@ where
 mod tests {
     use super::*;
     use crate::sensor::data::OwnedSensorData;
+    use std::collections::HashMap;
 
     #[tokio::test]
     async fn test_sensor_reader() {
@@ -92,7 +85,22 @@ mod tests {
 
         assert_eq!(reader.name(), MOCK_SENSOR_NAME);
 
-        let data = reader.read().await;
-        assert_eq!(data.name(), "OwnedSensorData");
+        let datas = reader.read().await.unwrap();
+        assert!(!datas.is_empty());
+        let data = &datas[0];
+        assert_eq!(data.metric_name(), "null_metric");
+
+        match data.value() {
+            ProtocolValue::U64(v) => {
+                dbg!(v);
+                assert!(v > 0);
+            }
+            _ => panic!("Expected U64 value"),
+        }
+
+        let labels = data.labels().collect::<HashMap<_, _>>();
+        assert_eq!(labels.len(), 2);
+        assert_eq!(labels.get("key1"), Some(&"value1"));
+        assert_eq!(labels.get("key2"), Some(&"value2"));
     }
 }

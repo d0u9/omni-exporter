@@ -1,13 +1,15 @@
 use std::collections::HashMap;
-use std::convert::Into;
+
+use crate::error::Result;
 
 use super::ProtocolGetter;
 use super::ProtocolSetter;
+use super::ProtocolValue;
 
 pub struct Plain {
     metric_name: String,
     labels: HashMap<String, String>,
-    value: String,
+    value: ProtocolValue,
 }
 
 impl Plain {
@@ -15,49 +17,35 @@ impl Plain {
         Self {
             metric_name: String::new(),
             labels: HashMap::new(),
-            value: String::new(),
+            value: ProtocolValue::None,
         }
-    }
-}
-
-impl ProtocolSetter for Plain {
-    type Cell = String;
-
-    fn metric_name(&mut self, name: &str) {
-        self.metric_name = name.to_string();
-    }
-
-    fn label<T: Into<Self::Cell>>(&mut self, key: &str, value: T) {
-        self.labels.insert(key.to_string(), value.into());
-    }
-
-    fn value<T: Into<Self::Cell>>(&mut self, value: T) {
-        self.value = value.into();
     }
 }
 
 impl ProtocolGetter for Plain {
-    type Cell = String;
-
-    fn metric_name(&self) -> &str {
+    fn get_metric_name(&self) -> &str {
         &self.metric_name
     }
 
-    fn label<T>(&self, key: &str) -> Option<T>
-    where
-        T: From<Cell>,
-    {
-        let v = self.labels.get(key);
-        match v {
-            Some(v) => Some(T::from(v.to_owned())),
-            None => None,
-        }
+    fn get_labels(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.labels.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }
 
-    fn value<T>(&self) -> Option<T>
-    where
-        T: From<Cell>,
-    {
-        Some(T::from(self.value.to_owned()))
+    fn get_value(&self) -> Result<ProtocolValue> {
+        Ok(self.value)
+    }
+}
+
+impl ProtocolSetter for Plain {
+    fn set_metric_name(&mut self, name: &str) {
+        self.metric_name = name.to_string();
+    }
+
+    fn set_labels(&mut self, key: &str, value: &str) {
+        self.labels.insert(key.to_string(), value.to_string());
+    }
+
+    fn set_value(&mut self, value: ProtocolValue) {
+        self.value = value;
     }
 }

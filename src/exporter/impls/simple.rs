@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use super::super::ExporterResult;
+use crate::error::Result;
+
 use super::super::traits::Collector;
 use super::super::traits::Exporter;
 use crate::sensor::SensorData;
@@ -9,7 +10,7 @@ use crate::sensor::SensorReader;
 // SimpleExporter schedules grabing data from sensors synchronously.
 // Each time the scrape() method is called, it will read data from all sensors and return the result.
 pub struct Simple<D: SensorData> {
-    sensors: HashMap<String, Box<dyn SensorReader<Data = D>>>,
+    sensors: HashMap<String, Box<dyn SensorReader<Data = D> + Send + Sync>>,
 }
 
 impl<D: SensorData + 'static> Simple<D> {
@@ -19,12 +20,14 @@ impl<D: SensorData + 'static> Simple<D> {
         }
     }
 
-    pub async fn do_scrape(&self) -> ExporterResult<String> {
+    pub async fn do_scrape(&self) -> Result<String> {
         let mut result = String::new();
         for sensor in self.sensors.values() {
-            let data = sensor.read().await;
+            let data = sensor.read().await?;
             dbg!(&data);
-            result.push_str(data.name());
+            for item in data {
+                result.push_str(item.metric_name());
+            }
         }
         Ok(result)
     }
@@ -33,7 +36,7 @@ impl<D: SensorData + 'static> Simple<D> {
 impl<D: SensorData + 'static> Exporter for Simple<D> {
     type Chips = String;
 
-    async fn scrape(&self) -> ExporterResult<Self::Chips> {
+    async fn scrape(&self) -> Result<Self::Chips> {
         self.do_scrape().await
     }
 }

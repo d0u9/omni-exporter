@@ -1,7 +1,10 @@
-use async_trait::async_trait;
 use std::fmt::Debug;
 
+use async_trait::async_trait;
+
+use crate::error::Result;
 use crate::protocol::ProtocolGetter;
+use crate::protocol::ProtocolValue;
 
 pub trait Sensor: Sync + Send {
     fn name(&self) -> &str;
@@ -14,12 +17,17 @@ pub trait SensorReader: Sync + Send + 'static {
     fn name(&self) -> &str;
     fn id(&self) -> &str;
 
-    async fn read(&self) -> Self::Data;
+    async fn read(&self) -> Result<Vec<Self::Data>>;
 }
 
-pub trait SensorData: Sync + Send + Debug + 'static {
-    fn name(&self) -> &str;
-    fn from_proto<P>(proto: P) -> Self
+pub trait SensorData: Sync + Send + Debug + Sized + 'static {
+    fn metric_name(&self) -> &str;
+
+    fn value(&self) -> ProtocolValue;
+
+    fn labels(&self) -> impl Iterator<Item = (&str, &str)>;
+
+    fn from_proto<P>(proto: P) -> Result<Self>
     where
         P: ProtocolGetter + Send + Sync + 'static;
 }

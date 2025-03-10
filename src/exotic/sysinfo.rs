@@ -18,11 +18,12 @@ impl SystemInner {
         self.sys.refresh_all();
     }
 
-    fn available_memory(&self) -> u64 {
-        self.sys.available_memory()
+    fn free_memory(&self) -> u64 {
+        self.sys.free_memory()
     }
 }
 
+#[derive(Clone)]
 pub struct System {
     inner: Arc<RwLock<SystemInner>>,
 }
@@ -40,9 +41,9 @@ impl System {
         inner.refresh();
     }
 
-    pub async fn available_memory(&self) -> u64 {
+    pub async fn free_memory(&self) -> u64 {
         let inner = self.inner.read().await;
-        inner.available_memory()
+        inner.free_memory()
     }
 }
 
@@ -51,10 +52,10 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_available_memory() {
+    async fn test_free_memory() {
         let sys = System::new();
-        let available_memory = sys.available_memory().await;
-        dbg!(&available_memory);
-        assert!(available_memory > 0);
+        let free_memory = sys.free_memory().await;
+        dbg!(&free_memory);
+        assert!(free_memory > 0);
     }
 }

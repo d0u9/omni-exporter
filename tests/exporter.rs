@@ -9,7 +9,7 @@ fn env_setup() {
 }
 
 #[tokio::test]
-async fn main_test() {
+async fn exporter_simple_test() {
     env_setup();
 
     let mock_sensor = MockSensor::new();
