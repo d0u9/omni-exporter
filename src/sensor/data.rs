@@ -1,9 +1,6 @@
-use std::marker::PhantomData;
+use crate::protocol::Protocol;
 
 use super::SensorData;
-
-use crate::protocol::Protocol;
-use crate::protocol::plain;
 
 #[derive(Debug)]
 pub struct OwnedSensorData {

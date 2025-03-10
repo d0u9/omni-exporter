@@ -1,28 +1,29 @@
+use std::marker::PhantomData;
+
 use crate::protocol::Protocol;
 use crate::protocol::plain::Plain;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
-use std::marker::PhantomData;
 
-pub struct MockSensor {}
+pub struct SensorImpl {}
 
-impl MockSensor {
+impl SensorImpl {
     pub fn new() -> Self {
         Self {}
     }
 
-    pub fn get_reader<T: SensorData>(&self) -> MockSensorReader<T> {
-        MockSensorReader::new()
+    pub fn get_reader<T: SensorData>(&self) -> SensorReaderImpl<T> {
+        SensorReaderImpl::new()
     }
 }
 
-pub struct MockSensorReader<T> {
+pub struct SensorReaderImpl<T> {
     name: String,
     id: String,
     _phantom: PhantomData<T>,
 }
 
-impl<T> MockSensorReader<T> {
+impl<T> SensorReaderImpl<T> {
     pub fn new() -> Self {
         Self {
             name: "MockSensor".to_string(),
@@ -32,7 +33,7 @@ impl<T> MockSensorReader<T> {
     }
 }
 
-impl<T> SensorReader for MockSensorReader<T>
+impl<T> SensorReader for SensorReaderImpl<T>
 where
     T: SensorData + Send + Sync + 'static,
 {

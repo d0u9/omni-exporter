@@ -1,5 +1,5 @@
-mod impl_simple;
-pub use impl_simple::Simple as SimpleExporter;
+mod impls;
+pub use impls::SimpleExporter;
 
 mod traits;
 pub use traits::Collector;

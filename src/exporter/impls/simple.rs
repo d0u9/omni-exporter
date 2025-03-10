@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use super::ExporterResult;
-use super::traits::Collector;
-use super::traits::Exporter;
+use super::super::ExporterResult;
+use super::super::traits::Collector;
+use super::super::traits::Exporter;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
 
