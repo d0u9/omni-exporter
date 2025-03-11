@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use async_trait::async_trait;
 
 use crate::error::Result;
-use crate::protocol::ProtocolGetter;
+use crate::protocol::Item as ProtoItem;
 use crate::protocol::Value as ProtoValue;
 
 pub trait Sensor: Sync + Send {
@@ -29,5 +29,5 @@ pub trait SensorData: Sync + Send + Debug + Sized + 'static {
 
     fn from_proto<P>(proto: P) -> Result<Self>
     where
-        P: ProtocolGetter + Send + Sync + 'static;
+        P: ProtoItem + Send + Sync + 'static;
 }

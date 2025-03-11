@@ -2,19 +2,23 @@ use std::collections::HashMap;
 
 use crate::error::Result;
 
-use super::ProtocolGetter;
-use super::ProtocolSetter;
+use super::Item;
+use super::Reader;
+use super::Timestamp;
 use super::Value as ProtoValue;
-use super::types::ProtoItem;
-use super::types::ProtoReader;
-use super::types::ProtoWriter;
-use super::types::Timestamp;
+use super::Writer;
 
 pub struct Plain {
-    items: Vec<PlainItem>,
+    pub items: Vec<PlainItem>,
 }
 
-impl<I: ProtoItem> ProtoWriter<I> for Plain {
+impl Plain {
+    pub fn new() -> Self {
+        Self { items: Vec::new() }
+    }
+}
+
+impl<I: Item> Writer<I> for Plain {
     fn add_item(&mut self, item: I) -> Result<()> {
         let item = PlainItem {
             metric_name: item.metric_name().to_owned(),
@@ -32,19 +36,20 @@ impl<I: ProtoItem> ProtoWriter<I> for Plain {
     }
 }
 
-impl ProtoReader for Plain {
+impl Reader for Plain {
     type Item = PlainItem;
+    type IntoIter = std::vec::IntoIter<PlainItem>;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        None
+    fn into_iter(self) -> Self::IntoIter {
+        self.items.into_iter()
     }
 }
 
 pub struct PlainItem {
-    metric_name: String,
-    labels: HashMap<String, String>,
-    value: ProtoValue,
-    timestamp: Timestamp,
+    pub metric_name: String,
+    pub labels: HashMap<String, String>,
+    pub value: ProtoValue,
+    pub timestamp: Timestamp,
 }
 
 impl PlainItem {
@@ -58,7 +63,7 @@ impl PlainItem {
     }
 }
 
-impl ProtoItem for PlainItem {
+impl Item for PlainItem {
     fn metric_name(&self) -> &str {
         self.metric_name.as_ref()
     }
@@ -73,49 +78,5 @@ impl ProtoItem for PlainItem {
 
     fn timestamp(&self) -> Timestamp {
         self.timestamp
-    }
-}
-
-pub struct PlainItemOld {
-    metric_name: String,
-    labels: HashMap<String, String>,
-    value: ProtoValue,
-}
-
-impl PlainItemOld {
-    pub fn new() -> Self {
-        Self {
-            metric_name: String::new(),
-            labels: HashMap::new(),
-            value: ProtoValue::None,
-        }
-    }
-}
-
-impl ProtocolGetter for PlainItemOld {
-    fn get_metric_name(&self) -> &str {
-        &self.metric_name
-    }
-
-    fn get_labels(&self) -> impl Iterator<Item = (&str, &str)> {
-        self.labels.iter().map(|(k, v)| (k.as_str(), v.as_str()))
-    }
-
-    fn get_value(&self) -> Result<ProtoValue> {
-        Ok(self.value)
-    }
-}
-
-impl ProtocolSetter for PlainItemOld {
-    fn set_metric_name(&mut self, name: &str) {
-        self.metric_name = name.to_string();
-    }
-
-    fn set_labels(&mut self, key: &str, value: &str) {
-        self.labels.insert(key.to_string(), value.to_string());
-    }
-
-    fn set_value(&mut self, value: ProtoValue) {
-        self.value = value;
     }
 }

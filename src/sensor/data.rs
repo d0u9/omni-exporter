@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::error::Result;
-use crate::protocol::ProtocolGetter;
+use crate::protocol::Item as ProtoItem;
 use crate::protocol::Value as ProtoValue;
 
 use super::traits::SensorData;
@@ -30,18 +30,17 @@ impl SensorData for OwnedSensorData {
 
     fn from_proto<P>(proto: P) -> Result<Self>
     where
-        P: ProtocolGetter + Send + Sync + 'static,
+        P: ProtoItem + Send + Sync + 'static,
     {
-        let d = proto.get_value()?;
-        let mut labels = HashMap::new();
-        for (k, v) in proto.get_labels() {
-            labels.insert(k.to_string(), v.to_string());
-        }
+        let s = Self {
+            metric_name: proto.metric_name().to_owned(),
+            value: proto.value().into(),
+            labels: proto
+                .labels()
+                .map(|(k, v)| (k.to_owned(), v.to_owned()))
+                .collect(),
+        };
 
-        Ok(Self {
-            metric_name: proto.get_metric_name().to_string(),
-            value: d,
-            labels,
-        })
+        Ok(s)
     }
 }

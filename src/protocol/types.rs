@@ -19,26 +19,7 @@ impl Into<f64> for Value {
     }
 }
 
-pub type Key = String;
-pub type Val = String;
-
-#[derive(Debug, Clone)]
-pub struct Label {
-    key: Key,
-    val: Val,
-}
-
 pub type Timestamp = Option<u64>;
-
-pub type MetricName = String;
-
-#[derive(Debug, Clone)]
-pub struct ProtoItem3 {
-    metric_name: MetricName,
-    labels: Vec<Label>,
-    value: Value,
-    timestamp: Timestamp,
-}
 
 pub trait ProtoItem {
     fn metric_name(&self) -> &str;

@@ -1,11 +1,12 @@
 use rand::Rng;
+use std::collections::HashMap;
 use std::marker::PhantomData;
 
 use crate::error::Result;
 use crate::exotic::uuid;
-use crate::protocol::ProtocolSetter;
 use crate::protocol::Value as ProtoValue;
-use crate::protocol::plain::PlainItemOld as PlainProto;
+use crate::protocol::plain::Plain as Proto;
+use crate::protocol::plain::PlainItem as ProtoItem;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
 use async_trait::async_trait;
@@ -40,25 +41,34 @@ impl<T> SensorReaderImpl<T> {
         }
     }
 
-    fn gen_mock_data(&self) -> PlainProto {
-        let mut plain_proto = PlainProto::new();
-
-        use rand::Rng;
+    fn gen_labels() -> HashMap<String, String> {
         let mut rng = rand::rng();
 
-        let random_value = rng.random_range(1..=10);
-        plain_proto.set_metric_name(format!("mock_metric_{}", random_value).as_str());
-        plain_proto.set_value(ProtoValue::U64(random_value));
-
-        let random_value = rng.random_range(0..=3);
-        for i in 1..random_value {
-            plain_proto.set_labels(
-                format!("key_{}", i).as_str(),
-                format!("value_{}", i).as_str(),
-            );
+        let mut labels = HashMap::new();
+        let rdm = rng.random_range(2..=5);
+        for i in 1..=rdm {
+            labels.insert(format!("mock_key_{}", i), format!("mock_val_{}", i));
         }
 
-        plain_proto
+        labels
+    }
+
+    fn gen_mock_data(&self) -> Proto {
+        let mut rng = rand::rng();
+
+        let mut items = Vec::<ProtoItem>::new();
+
+        let rdm = rng.random_range(2..5);
+        for i in 1..=rdm {
+            items.push(ProtoItem {
+                metric_name: format!("mock_metric_{}", i),
+                labels: Self::gen_labels(),
+                value: ProtoValue::F64(3.14),
+                timestamp: None,
+            });
+        }
+
+        Proto { items }
     }
 }
 
@@ -79,8 +89,11 @@ where
 
     async fn read(&self) -> Result<Vec<Self::Data>> {
         let proto = self.gen_mock_data();
-
-        Ok(vec![Self::Data::from_proto(proto).unwrap()])
+        Ok(proto
+            .items
+            .into_iter()
+            .map(|item| Self::Data::from_proto(item).unwrap())
+            .collect())
     }
 }
 
@@ -88,7 +101,6 @@ where
 mod tests {
     use super::*;
     use crate::sensor::data::OwnedSensorData;
-    use std::collections::HashMap;
 
     #[tokio::test]
     async fn test_sensor_reader() {
