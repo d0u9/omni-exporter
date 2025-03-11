@@ -36,14 +36,15 @@ impl<I: Item> Writer<I> for Plain {
     }
 }
 
-impl Reader for Plain {
+impl Iterator for Plain {
     type Item = PlainItem;
-    type IntoIter = std::vec::IntoIter<PlainItem>;
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.items.into_iter()
+    fn next(&mut self) -> Option<Self::Item> {
+        self.items.pop()
     }
 }
+
+impl Reader for Plain {}
 
 pub struct PlainItem {
     pub metric_name: String,

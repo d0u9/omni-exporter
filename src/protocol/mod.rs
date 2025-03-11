@@ -1,7 +1,7 @@
 mod traits;
-pub use traits::ProtoItem as Item;
-pub use traits::ProtoReader as Reader;
-pub use traits::ProtoWriter as Writer;
+pub use traits::Item;
+pub use traits::Reader;
+pub use traits::Writer;
 
 pub mod plain;
 
