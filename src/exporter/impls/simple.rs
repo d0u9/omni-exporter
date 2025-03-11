@@ -1,11 +1,73 @@
 use std::collections::HashMap;
+use std::default::Default;
 
 use crate::error::Result;
-
-use super::super::traits::Collector;
-use super::super::traits::Exporter;
+use crate::protocol::ProtocolValue;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
+
+use super::super::Collector;
+use super::super::Exporter;
+use super::super::Metric as MetricTrait;
+use super::super::Chip as ChipTrait;
+
+#[derive(Debug)]
+pub struct Chip {
+    metrics: Vec<Metric>,
+}
+
+impl Default for Chip {
+    fn default() -> Self {
+        Self { metrics: Vec::new() }
+    }
+}
+
+impl ChipTrait for Chip {
+    type M = Metric;
+
+    fn metrics(&self) -> impl Iterator<Item = &Self::M> {
+        self.metrics.iter()
+    }
+}
+
+#[derive(Debug)]
+pub struct Metric {
+    name: String,
+    labels: HashMap<String, String>,
+    value: f64,
+    timestamp: Option<u64>,
+}
+
+impl<T: SensorData> From<T> for Metric {
+    fn from(data: T) -> Self {
+        Metric {
+            name: data.metric_name().to_owned(),
+            labels: HashMap::new(),
+            value: data.value().into(),
+            timestamp: None,
+        }
+    }
+}
+
+impl MetricTrait for Metric {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn labels(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.labels.iter().map(|(k, v)| (k.as_str(), v.as_str()))
+    }
+
+    fn value(&self) -> f64 {
+        self.value
+    }
+
+    fn timestamp(&self) -> Option<u64> {
+        self.timestamp
+    }
+}
+
+
 
 // SimpleExporter schedules grabing data from sensors synchronously.
 // Each time the scrape() method is called, it will read data from all sensors and return the result.
@@ -20,23 +82,25 @@ impl<D: SensorData + 'static> Simple<D> {
         }
     }
 
-    pub async fn do_scrape(&self) -> Result<String> {
-        let mut result = String::new();
+    pub async fn do_scrape(&self) -> Result<Chip> {
+        let mut chip: Chip = Default::default();
+
         for sensor in self.sensors.values() {
             let data = sensor.read().await?;
+
             dbg!(&data);
             for item in data {
-                result.push_str(item.metric_name());
+                chip.metrics.push(Metric::from(item));
             }
         }
-        Ok(result)
+        Ok(chip)
     }
 }
 
 impl<D: SensorData + 'static> Exporter for Simple<D> {
-    type Chips = String;
+    type Metrics = Chip;
 
-    async fn scrape(&self) -> Result<Self::Chips> {
+    async fn scrape(&self) -> Result<Self::Metrics> {
         self.do_scrape().await
     }
 }

@@ -1,27 +1,28 @@
 use std::marker::PhantomData;
-use rand::Rng;
 
 use crate::error::Result;
+use crate::exotic::sysinfo::System;
 use crate::exotic::uuid;
 use crate::protocol::ProtocolSetter;
 use crate::protocol::ProtocolValue;
-use crate::protocol::plain::Plain as PlainProto;
+use crate::protocol::plain::Plain;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
 use async_trait::async_trait;
 
-const MOCK_SENSOR_NAME: &str = "MockSensor";
+const SENSOR_NAME: &str = "SystemSensor";
 
 pub struct SensorImpl {
+    sys: System,
 }
 
 impl SensorImpl {
     pub fn new() -> Self {
-        Self {}
+        Self { sys: System::new() }
     }
 
     pub fn get_reader<T: SensorData>(&self) -> SensorReaderImpl<T> {
-        SensorReaderImpl::new()
+        SensorReaderImpl::new_with_sysinfo(self.sys.clone())
     }
 }
 
@@ -29,35 +30,18 @@ impl SensorImpl {
 pub struct SensorReaderImpl<T> {
     name: &'static str,
     id: String,
+    sys: System,
     _phantom: PhantomData<T>,
 }
 
 impl<T> SensorReaderImpl<T> {
-    pub fn new() -> Self {
+    pub fn new_with_sysinfo(sys: System) -> Self {
         Self {
-            name: MOCK_SENSOR_NAME,
+            name: SENSOR_NAME,
             id: uuid::new(),
+            sys,
             _phantom: PhantomData,
         }
-    }
-
-    fn gen_mock_data(&self) -> PlainProto {
-        let mut plain_proto = PlainProto::new();
-
-        use rand::Rng;
-        let mut rng = rand::rng();
-
-
-        let random_value = rng.random_range(1..=10);
-        plain_proto.set_metric_name(format!("mock_metric_{}", random_value).as_str());
-        plain_proto.set_value(ProtocolValue::U64(random_value));
-
-        let random_value = rng.random_range(0..=3);
-        for i in 1..random_value {
-            plain_proto.set_labels(format!("key_{}", i).as_str(), format!("value_{}", i).as_str());
-        }
-
-        plain_proto
     }
 }
 
@@ -77,10 +61,14 @@ where
     }
 
     async fn read(&self) -> Result<Vec<Self::Data>> {
+        let sys = self.sys.free_memory().await;
 
-        let proto = self.gen_mock_data();
-
-        Ok(vec![Self::Data::from_proto(proto).unwrap()])
+        let mut plain_proto = Plain::new();
+        plain_proto.set_metric_name("null_metric");
+        plain_proto.set_value(ProtocolValue::U64(sys));
+        plain_proto.set_labels("key1", "value1");
+        plain_proto.set_labels("key2", "value2");
+        Ok(vec![Self::Data::from_proto(plain_proto).unwrap()])
     }
 }
 
@@ -95,12 +83,12 @@ mod tests {
         let sensor = SensorImpl::new();
         let reader = sensor.get_reader::<OwnedSensorData>();
 
-        assert_eq!(reader.name(), MOCK_SENSOR_NAME);
+        assert_eq!(reader.name(), SENSOR_NAME);
 
         let datas = reader.read().await.unwrap();
         assert!(!datas.is_empty());
         let data = &datas[0];
-        assert!(data.metric_name().starts_with("mock_metric_"));
+        assert_eq!(data.metric_name(), "null_metric");
 
         match data.value() {
             ProtocolValue::U64(v) => {
@@ -109,5 +97,11 @@ mod tests {
             }
             _ => panic!("Expected U64 value"),
         }
+
+        let labels = data.labels().collect::<HashMap<_, _>>();
+        assert_eq!(labels.len(), 2);
+        assert_eq!(labels.get("key1"), Some(&"value1"));
+        assert_eq!(labels.get("key2"), Some(&"value2"));
     }
 }
+

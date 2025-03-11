@@ -1,13 +1,9 @@
 use crate::error::Result;
 
+use super::ProtocolValue;
+
 // https://prometheus.io/docs/instrumenting/exposition_formats/#comments-help-text-and-type-information
 
-#[derive(Debug, Clone, Copy)]
-pub enum ProtocolValue {
-    None,
-    F64(f64),
-    U64(u64),
-}
 
 pub trait ProtocolGetter {
     fn get_metric_name(&self) -> &str;
