@@ -13,6 +13,12 @@ pub struct Plain {
     items: Vec<PlainItem>,
 }
 
+impl Default for Plain {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Plain {
     pub fn new() -> Self {
         Self { items: Vec::new() }
@@ -52,6 +58,12 @@ pub struct PlainItem {
     labels: HashMap<String, String>,
     value: ProtoValue,
     timestamp: Timestamp,
+}
+
+impl Default for PlainItem {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PlainItem {

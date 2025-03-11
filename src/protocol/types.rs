@@ -1,4 +1,4 @@
-use std::convert::Into;
+use std::convert::From;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Value {
@@ -7,9 +7,9 @@ pub enum Value {
     U64(u64),
 }
 
-impl Into<f64> for Value {
-    fn into(self) -> f64 {
-        match self {
+impl From<Value> for f64 {
+    fn from(value: Value) -> Self {
+        match value {
             Value::F64(v) => v,
             Value::U64(v) => v as f64,
             _ => f64::NAN,

@@ -10,17 +10,9 @@ use super::super::Collector;
 use super::super::Exporter;
 use super::super::Metric as MetricTrait;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Chip {
     metrics: Vec<Metric>,
-}
-
-impl Default for Chip {
-    fn default() -> Self {
-        Self {
-            metrics: Vec::new(),
-        }
-    }
 }
 
 impl ChipTrait for Chip {
@@ -72,6 +64,12 @@ impl MetricTrait for Metric {
 // Each time the scrape() method is called, it will read data from all sensors and return the result.
 pub struct Simple<D: SensorData> {
     sensors: HashMap<String, Box<dyn SensorReader<Data = D> + Send + Sync>>,
+}
+
+impl<D: SensorData + 'static> Default for Simple<D> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<D: SensorData + 'static> Simple<D> {

@@ -7,6 +7,12 @@ pub struct SystemInner {
     sys: sysinfo::System,
 }
 
+impl Default for SystemInner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SystemInner {
     fn new() -> Self {
         let mut sys = sysinfo::System::new_all();
@@ -26,6 +32,12 @@ impl SystemInner {
 #[derive(Clone)]
 pub struct System {
     inner: Arc<RwLock<SystemInner>>,
+}
+
+impl Default for System {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl System {

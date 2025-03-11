@@ -17,6 +17,12 @@ const MOCK_SENSOR_NAME: &str = "MockSensor";
 
 pub struct SensorImpl {}
 
+impl Default for SensorImpl {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SensorImpl {
     pub fn new() -> Self {
         Self {}
@@ -32,6 +38,12 @@ pub struct SensorReaderImpl<T> {
     name: &'static str,
     id: String,
     _phantom: PhantomData<T>,
+}
+
+impl<T> Default for SensorReaderImpl<T> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T> SensorReaderImpl<T> {
