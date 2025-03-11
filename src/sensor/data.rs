@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::error::Result;
-use crate::protocol::Item as ProtoItem;
+use crate::protocol::ItemGetter as ProtoItem;
 use crate::protocol::Value as ProtoValue;
 
 use super::traits::SensorData;

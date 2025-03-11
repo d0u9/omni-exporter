@@ -4,7 +4,9 @@ use std::marker::PhantomData;
 
 use crate::error::Result;
 use crate::exotic::uuid;
+use crate::protocol::ItemSetter;
 use crate::protocol::Value as ProtoValue;
+use crate::protocol::Writer as ProtoWriter;
 use crate::protocol::plain::Plain as Proto;
 use crate::protocol::plain::PlainItem as ProtoItem;
 use crate::sensor::SensorData;
@@ -60,15 +62,21 @@ impl<T> SensorReaderImpl<T> {
 
         let rdm = rng.random_range(2..5);
         for i in 1..=rdm {
-            items.push(ProtoItem {
-                metric_name: format!("mock_metric_{}", i),
-                labels: Self::gen_labels(),
-                value: ProtoValue::F64(3.14),
-                timestamp: None,
-            });
+            let mut item = ProtoItem::new();
+            item.set_metric_name(&format!("mock_metric_{}", i));
+            item.set_labels(
+                Self::gen_labels()
+                    .iter()
+                    .map(|(k, v)| (k.as_str(), v.as_str())),
+            );
+            item.set_value(ProtoValue::F64(std::f64::consts::PI));
+            item.set_timestamp(None);
+            items.push(item);
         }
 
-        Proto { items }
+        let mut proto = Proto::new();
+        let _ = proto.add_items(items.into_iter());
+        proto
     }
 }
 
@@ -80,7 +88,7 @@ where
     type Data = T;
 
     fn name(&self) -> &str {
-        &self.name
+        self.name
     }
 
     fn id(&self) -> &str {
@@ -90,8 +98,6 @@ where
     async fn read(&self) -> Result<Vec<Self::Data>> {
         let proto = self.gen_mock_data();
         Ok(proto
-            .items
-            .into_iter()
             .map(|item| Self::Data::from_proto(item).unwrap())
             .collect())
     }
@@ -114,12 +120,7 @@ mod tests {
         let data = &datas[0];
         assert!(data.metric_name().starts_with("mock_metric_"));
 
-        match data.value() {
-            ProtoValue::U64(v) => {
-                dbg!(v);
-                assert!(v > 0);
-            }
-            _ => panic!("Expected U64 value"),
-        }
+        let value: f64 = data.value().into();
+        assert_eq!(value, std::f64::consts::PI);
     }
 }

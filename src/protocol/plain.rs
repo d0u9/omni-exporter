@@ -2,14 +2,15 @@ use std::collections::HashMap;
 
 use crate::error::Result;
 
-use super::Item;
+use super::ItemGetter;
+use super::ItemSetter;
 use super::Reader;
 use super::Timestamp;
 use super::Value as ProtoValue;
 use super::Writer;
 
 pub struct Plain {
-    pub items: Vec<PlainItem>,
+    items: Vec<PlainItem>,
 }
 
 impl Plain {
@@ -18,7 +19,7 @@ impl Plain {
     }
 }
 
-impl<I: Item> Writer<I> for Plain {
+impl<I: ItemGetter> Writer<I> for Plain {
     fn add_item(&mut self, item: I) -> Result<()> {
         let item = PlainItem {
             metric_name: item.metric_name().to_owned(),
@@ -47,10 +48,10 @@ impl Iterator for Plain {
 impl Reader for Plain {}
 
 pub struct PlainItem {
-    pub metric_name: String,
-    pub labels: HashMap<String, String>,
-    pub value: ProtoValue,
-    pub timestamp: Timestamp,
+    metric_name: String,
+    labels: HashMap<String, String>,
+    value: ProtoValue,
+    timestamp: Timestamp,
 }
 
 impl PlainItem {
@@ -64,7 +65,7 @@ impl PlainItem {
     }
 }
 
-impl Item for PlainItem {
+impl ItemGetter for PlainItem {
     fn metric_name(&self) -> &str {
         self.metric_name.as_ref()
     }
@@ -79,5 +80,26 @@ impl Item for PlainItem {
 
     fn timestamp(&self) -> Timestamp {
         self.timestamp
+    }
+}
+
+impl ItemSetter for PlainItem {
+    fn set_metric_name(&mut self, name: &str) {
+        self.metric_name = name.to_owned();
+    }
+
+    fn set_labels<'a>(&mut self, labels: impl Iterator<Item = (&'a str, &'a str)>) {
+        self.labels.clear();
+        for (k, v) in labels {
+            self.labels.insert(k.to_owned(), v.to_owned());
+        }
+    }
+
+    fn set_value(&mut self, value: impl Into<ProtoValue>) {
+        self.value = value.into();
+    }
+
+    fn set_timestamp(&mut self, timestamp: Timestamp) {
+        self.timestamp = timestamp;
     }
 }

@@ -1,5 +1,6 @@
 mod traits;
-pub use traits::Item;
+pub use traits::ItemGetter;
+pub use traits::ItemSetter;
 pub use traits::Reader;
 pub use traits::Writer;
 
