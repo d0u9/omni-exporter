@@ -3,9 +3,9 @@ use std::marker::PhantomData;
 
 use crate::error::Result;
 use crate::exotic::uuid;
-use crate::protocol::ProtoValue;
 use crate::protocol::ProtocolSetter;
-use crate::protocol::plain::Plain as PlainProto;
+use crate::protocol::Value as ProtoValue;
+use crate::protocol::plain::PlainItemOld as PlainProto;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
 use async_trait::async_trait;

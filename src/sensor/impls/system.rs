@@ -3,9 +3,9 @@ use std::marker::PhantomData;
 use crate::error::Result;
 use crate::exotic::sysinfo::System;
 use crate::exotic::uuid;
-use crate::protocol::ProtoValue;
 use crate::protocol::ProtocolSetter;
-use crate::protocol::plain::Plain;
+use crate::protocol::Value as ProtoValue;
+use crate::protocol::plain::PlainItemOld;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
 use async_trait::async_trait;
@@ -63,7 +63,7 @@ where
     async fn read(&self) -> Result<Vec<Self::Data>> {
         let sys = self.sys.free_memory().await;
 
-        let mut plain_proto = Plain::new();
+        let mut plain_proto = PlainItemOld::new();
         plain_proto.set_metric_name("null_metric");
         plain_proto.set_value(ProtoValue::U64(sys));
         plain_proto.set_labels("key1", "value1");

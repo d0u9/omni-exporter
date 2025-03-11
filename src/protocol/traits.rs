@@ -4,10 +4,6 @@ use super::types::ProtoItem;
 use super::types::Value;
 
 // https://prometheus.io/docs/instrumenting/exposition_formats/#comments-help-text-and-type-information
-pub trait Proto {
-    fn into_proto() -> impl Iterator<Item = ProtoItem>;
-}
-
 pub trait ProtocolGetter {
     fn get_metric_name(&self) -> &str;
     fn get_labels(&self) -> impl Iterator<Item = (&str, &str)>;

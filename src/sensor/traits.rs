@@ -3,8 +3,8 @@ use std::fmt::Debug;
 use async_trait::async_trait;
 
 use crate::error::Result;
-use crate::protocol::ProtoValue;
 use crate::protocol::ProtocolGetter;
+use crate::protocol::Value as ProtoValue;
 
 pub trait Sensor: Sync + Send {
     fn name(&self) -> &str;

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::error::Result;
-use crate::protocol::ProtoValue;
 use crate::protocol::ProtocolGetter;
+use crate::protocol::Value as ProtoValue;
 
 use super::traits::SensorData;
 

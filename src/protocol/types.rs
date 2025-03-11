@@ -1,5 +1,7 @@
 use std::convert::Into;
 
+use crate::error::Result;
+
 #[derive(Debug, Clone, Copy)]
 pub enum Value {
     None,
@@ -26,14 +28,34 @@ pub struct Label {
     val: Val,
 }
 
-pub type Timestamp = u64;
+pub type Timestamp = Option<u64>;
 
 pub type MetricName = String;
 
 #[derive(Debug, Clone)]
-pub struct ProtoItem {
+pub struct ProtoItem3 {
     metric_name: MetricName,
     labels: Vec<Label>,
     value: Value,
     timestamp: Timestamp,
+}
+
+pub trait ProtoItem {
+    fn metric_name(&self) -> &str;
+    fn labels(&self) -> impl Iterator<Item = (&str, &str)>;
+    fn value(&self) -> impl Into<Value>;
+    fn timestamp(&self) -> Timestamp;
+}
+
+pub trait ProtoWriter<I>
+where
+    I: ProtoItem,
+{
+    fn add_item(&mut self, item: I) -> Result<()>;
+}
+
+pub trait ProtoReader {
+    type Item: ProtoItem;
+
+    fn next(&mut self) -> Option<Self::Item>;
 }
