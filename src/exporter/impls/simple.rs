@@ -2,14 +2,13 @@ use std::collections::HashMap;
 use std::default::Default;
 
 use crate::error::Result;
-use crate::protocol::ProtocolValue;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
 
+use super::super::Chip as ChipTrait;
 use super::super::Collector;
 use super::super::Exporter;
 use super::super::Metric as MetricTrait;
-use super::super::Chip as ChipTrait;
 
 #[derive(Debug)]
 pub struct Chip {
@@ -18,7 +17,9 @@ pub struct Chip {
 
 impl Default for Chip {
     fn default() -> Self {
-        Self { metrics: Vec::new() }
+        Self {
+            metrics: Vec::new(),
+        }
     }
 }
 
@@ -66,8 +67,6 @@ impl MetricTrait for Metric {
         self.timestamp
     }
 }
-
-
 
 // SimpleExporter schedules grabing data from sensors synchronously.
 // Each time the scrape() method is called, it will read data from all sensors and return the result.

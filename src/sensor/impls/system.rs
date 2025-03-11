@@ -3,8 +3,8 @@ use std::marker::PhantomData;
 use crate::error::Result;
 use crate::exotic::sysinfo::System;
 use crate::exotic::uuid;
+use crate::protocol::ProtoValue;
 use crate::protocol::ProtocolSetter;
-use crate::protocol::ProtocolValue;
 use crate::protocol::plain::Plain;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
@@ -65,7 +65,7 @@ where
 
         let mut plain_proto = Plain::new();
         plain_proto.set_metric_name("null_metric");
-        plain_proto.set_value(ProtocolValue::U64(sys));
+        plain_proto.set_value(ProtoValue::U64(sys));
         plain_proto.set_labels("key1", "value1");
         plain_proto.set_labels("key2", "value2");
         Ok(vec![Self::Data::from_proto(plain_proto).unwrap()])
@@ -91,7 +91,7 @@ mod tests {
         assert_eq!(data.metric_name(), "null_metric");
 
         match data.value() {
-            ProtocolValue::U64(v) => {
+            ProtoValue::U64(v) => {
                 dbg!(v);
                 assert!(v > 0);
             }
@@ -104,4 +104,3 @@ mod tests {
         assert_eq!(labels.get("key2"), Some(&"value2"));
     }
 }
-

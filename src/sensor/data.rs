@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::error::Result;
+use crate::protocol::ProtoValue;
 use crate::protocol::ProtocolGetter;
-use crate::protocol::ProtocolValue;
 
 use super::traits::SensorData;
 
@@ -11,7 +11,7 @@ pub type SensorDataChunk<T> = Vec<T>;
 #[derive(Debug)]
 pub struct OwnedSensorData {
     metric_name: String,
-    value: ProtocolValue,
+    value: ProtoValue,
     labels: HashMap<String, String>,
 }
 
@@ -20,7 +20,7 @@ impl SensorData for OwnedSensorData {
         &self.metric_name
     }
 
-    fn value(&self) -> ProtocolValue {
+    fn value(&self) -> ProtoValue {
         self.value
     }
 

@@ -2,14 +2,14 @@ use std::collections::HashMap;
 
 use crate::error::Result;
 
+use super::ProtoValue;
 use super::ProtocolGetter;
 use super::ProtocolSetter;
-use super::ProtocolValue;
 
 pub struct Plain {
     metric_name: String,
     labels: HashMap<String, String>,
-    value: ProtocolValue,
+    value: ProtoValue,
 }
 
 impl Plain {
@@ -17,7 +17,7 @@ impl Plain {
         Self {
             metric_name: String::new(),
             labels: HashMap::new(),
-            value: ProtocolValue::None,
+            value: ProtoValue::None,
         }
     }
 }
@@ -31,7 +31,7 @@ impl ProtocolGetter for Plain {
         self.labels.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }
 
-    fn get_value(&self) -> Result<ProtocolValue> {
+    fn get_value(&self) -> Result<ProtoValue> {
         Ok(self.value)
     }
 }
@@ -45,7 +45,7 @@ impl ProtocolSetter for Plain {
         self.labels.insert(key.to_string(), value.to_string());
     }
 
-    fn set_value(&mut self, value: ProtocolValue) {
+    fn set_value(&mut self, value: ProtoValue) {
         self.value = value;
     }
 }

@@ -3,8 +3,8 @@ use std::fmt::Debug;
 use async_trait::async_trait;
 
 use crate::error::Result;
+use crate::protocol::ProtoValue;
 use crate::protocol::ProtocolGetter;
-use crate::protocol::ProtocolValue;
 
 pub trait Sensor: Sync + Send {
     fn name(&self) -> &str;
@@ -23,7 +23,7 @@ pub trait SensorReader: Sync + Send + 'static {
 pub trait SensorData: Sync + Send + Debug + Sized + 'static {
     fn metric_name(&self) -> &str;
 
-    fn value(&self) -> ProtocolValue;
+    fn value(&self) -> ProtoValue;
 
     fn labels(&self) -> impl Iterator<Item = (&str, &str)>;
 

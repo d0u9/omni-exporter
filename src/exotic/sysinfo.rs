@@ -3,8 +3,6 @@ use std::sync::Arc;
 use sysinfo;
 use tokio::sync::RwLock;
 
-
-
 pub struct SystemInner {
     sys: sysinfo::System,
 }
