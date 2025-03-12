@@ -12,6 +12,7 @@ use crate::protocol::Value as ProtoValue;
 use crate::protocol::Writer as ProtoWriter;
 use crate::protocol::plain::Plain as Proto;
 use crate::protocol::plain::PlainItem as ProtoItem;
+use crate::sensor::traits::DataFromProtoRef;
 
 use super::super::traits::Data;
 use super::super::traits::Reader;
@@ -98,7 +99,7 @@ impl<T> SensorReaderImpl<T> {
 #[async_trait]
 impl<T> Reader<T, Vec<T>> for SensorReaderImpl<T>
 where
-    T: Data + Send + Sync + 'static,
+    T: Data + DataFromProtoRef + Send + Sync + 'static,
 {
     fn name(&self) -> &str {
         self.name

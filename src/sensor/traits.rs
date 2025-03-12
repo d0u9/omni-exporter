@@ -28,7 +28,9 @@ pub trait Data: Sync + Send + Debug + Sized + 'static {
     fn value(&self) -> ProtoValue;
 
     fn labels(&self) -> impl Iterator<Item = (&str, &str)>;
+}
 
+pub trait DataFromProtoRef: Sync + Send + Debug + Sized + 'static {
     fn from_proto<P>(proto: &P) -> Result<Self>
     where
         P: ProtoItem + Send + Sync + 'static;

@@ -5,6 +5,7 @@ use crate::protocol::ItemGetter as ProtoItem;
 use crate::protocol::Value as ProtoValue;
 
 use super::traits::Data;
+use super::traits::DataFromProtoRef;
 
 #[derive(Debug)]
 pub struct OwnedData {
@@ -25,7 +26,9 @@ impl Data for OwnedData {
     fn labels(&self) -> impl Iterator<Item = (&str, &str)> {
         self.labels.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }
+}
 
+impl DataFromProtoRef for OwnedData {
     fn from_proto<P>(proto: &P) -> Result<Self>
     where
         P: ProtoItem + Send + Sync + 'static,

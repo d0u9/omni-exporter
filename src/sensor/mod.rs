@@ -1,5 +1,6 @@
 mod traits;
 pub use traits::Data as SensorData;
+pub use traits::DataFromProtoRef as SensorDataFromRef;
 pub use traits::Reader as SensorReader;
 pub use traits::Sensor;
 
