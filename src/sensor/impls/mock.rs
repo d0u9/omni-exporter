@@ -95,7 +95,7 @@ impl<T> SensorReaderImpl<T> {
 }
 
 #[async_trait]
-impl<T> Reader<T> for SensorReaderImpl<T>
+impl<T> Reader<T, Vec<T>> for SensorReaderImpl<T>
 where
     T: Data + Send + Sync + 'static,
 {

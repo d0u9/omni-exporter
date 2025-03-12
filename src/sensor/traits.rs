@@ -11,14 +11,15 @@ pub trait Sensor: Sync + Send {
 }
 
 #[async_trait]
-pub trait Reader<T>: Sync + Send + 'static
+pub trait Reader<T, I>: Sync + Send + 'static
 where
     T: Data + Sized,
+    I: IntoIterator<Item = T>,
 {
     fn name(&self) -> &str;
     fn id(&self) -> &str;
 
-    async fn read(&self) -> Result<Vec<T>>;
+    async fn read(&self) -> Result<I>;
 }
 
 pub trait Data: Sync + Send + Debug + Sized + 'static {

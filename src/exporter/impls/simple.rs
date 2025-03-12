@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-use std::default::Default;
-
 use crate::error::Result;
 use crate::sensor::SensorData;
 use crate::sensor::SensorReader;
+use std::collections::HashMap;
+use std::default::Default;
+use std::fmt::Debug;
 
 use super::super::Chip as ChipTrait;
 use super::super::Collector;
@@ -62,17 +62,32 @@ impl MetricTrait for Metric {
 
 // SimpleExporter schedules grabing data from sensors synchronously.
 // Each time the scrape() method is called, it will read data from all sensors and return the result.
-pub struct Simple<D: SensorData> {
-    sensors: HashMap<String, Box<dyn SensorReader<D> + Send + Sync>>,
+pub struct Simple<D, I>
+where
+    D: SensorData + Debug + 'static,
+    I: IntoIterator<Item = D> + Debug + 'static,
+    I::IntoIter: Send + Sync,
+{
+    sensors: HashMap<String, Box<dyn SensorReader<D, I> + Send + Sync>>,
 }
 
-impl<D: SensorData + 'static> Default for Simple<D> {
+impl<D, I> Default for Simple<D, I>
+where
+    D: SensorData + Debug,
+    I: IntoIterator<Item = D> + Debug,
+    I::IntoIter: Send + Sync,
+{
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<D: SensorData + 'static> Simple<D> {
+impl<D, I> Simple<D, I>
+where
+    D: SensorData + Debug,
+    I: IntoIterator<Item = D> + Debug,
+    I::IntoIter: Send + Sync,
+{
     pub fn new() -> Self {
         Self {
             sensors: HashMap::new(),
@@ -81,12 +96,11 @@ impl<D: SensorData + 'static> Simple<D> {
 
     pub async fn do_scrape(&self) -> Result<Chip> {
         let mut chip: Chip = Default::default();
-
         for sensor in self.sensors.values() {
             let data = sensor.read().await?;
 
             dbg!(&data);
-            for item in data {
+            for item in data.into_iter() {
                 chip.metrics.push(Metric::from(item));
             }
         }
@@ -94,7 +108,11 @@ impl<D: SensorData + 'static> Simple<D> {
     }
 }
 
-impl<D: SensorData + 'static> Exporter for Simple<D> {
+impl<D: SensorData + 'static, I> Exporter for Simple<D, I>
+where
+    I: IntoIterator<Item = D> + Debug + 'static,
+    I::IntoIter: Send + Sync,
+{
     type Metrics = Chip;
 
     async fn scrape(&self) -> Result<Self::Metrics> {
@@ -102,10 +120,15 @@ impl<D: SensorData + 'static> Exporter for Simple<D> {
     }
 }
 
-impl<D: SensorData + 'static> Collector<D> for Simple<D> {
+impl<D, I> Collector<D, I> for Simple<D, I>
+where
+    D: SensorData + Debug + 'static,
+    I: IntoIterator<Item = D> + Debug + 'static,
+    I::IntoIter: Send + Sync,
+{
     fn add_sensor<T>(&mut self, sensor_reader: T)
     where
-        T: SensorReader<D> + Send + Sync + Sized,
+        T: SensorReader<D, I> + Send + Sync + Sized + 'static,
     {
         self.sensors
             .insert(sensor_reader.name().to_string(), Box::new(sensor_reader));

@@ -12,8 +12,13 @@ pub trait Exporter {
     fn scrape(&self) -> impl Future<Output = Result<Self::Metrics>> + Send;
 }
 
-pub trait Collector<D: SensorData> {
-    fn add_sensor<T: SensorReader<D> + Send + 'static>(&mut self, sensor: T);
+pub trait Collector<D, I>
+where
+    D: SensorData + 'static,
+    I: IntoIterator<Item = D> + 'static,
+    I::IntoIter: Send + Sync,
+{
+    fn add_sensor<T: SensorReader<D, I> + Send + 'static>(&mut self, sensor: T);
 }
 
 pub trait Chip {
