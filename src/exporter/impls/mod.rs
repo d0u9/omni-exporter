@@ -1,2 +1,2 @@
 mod simple;
-pub use simple::Simple as SimpleExporter;
+pub use simple::Simple;
