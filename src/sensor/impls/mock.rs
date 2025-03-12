@@ -1,6 +1,8 @@
-use rand::Rng;
 use std::collections::HashMap;
 use std::marker::PhantomData;
+
+use async_trait::async_trait;
+use rand::Rng;
 
 use crate::error::Result;
 use crate::exotic::uuid;
@@ -9,9 +11,9 @@ use crate::protocol::Value as ProtoValue;
 use crate::protocol::Writer as ProtoWriter;
 use crate::protocol::plain::Plain as Proto;
 use crate::protocol::plain::PlainItem as ProtoItem;
-use crate::sensor::SensorData;
-use crate::sensor::SensorReader;
-use async_trait::async_trait;
+
+use super::super::traits::Data;
+use super::super::traits::Reader;
 
 const MOCK_SENSOR_NAME: &str = "MockSensor";
 
@@ -28,7 +30,7 @@ impl SensorImpl {
         Self {}
     }
 
-    pub fn get_reader<T: SensorData>(&self) -> SensorReaderImpl<T> {
+    pub fn get_reader<T: Data>(&self) -> SensorReaderImpl<T> {
         SensorReaderImpl::new()
     }
 }
@@ -93,9 +95,9 @@ impl<T> SensorReaderImpl<T> {
 }
 
 #[async_trait]
-impl<T> SensorReader for SensorReaderImpl<T>
+impl<T> Reader for SensorReaderImpl<T>
 where
-    T: SensorData + Send + Sync + 'static,
+    T: Data + Send + Sync + 'static,
 {
     type Data = T;
 
@@ -118,12 +120,12 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sensor::data::OwnedSensorData;
+    use crate::sensor::data::OwnedData;
 
     #[tokio::test]
     async fn test_sensor_reader() {
         let sensor = SensorImpl::new();
-        let reader = sensor.get_reader::<OwnedSensorData>();
+        let reader = sensor.get_reader::<OwnedData>();
 
         assert_eq!(reader.name(), MOCK_SENSOR_NAME);
 

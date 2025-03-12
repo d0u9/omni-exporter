@@ -4,18 +4,16 @@ use crate::error::Result;
 use crate::protocol::ItemGetter as ProtoItem;
 use crate::protocol::Value as ProtoValue;
 
-use super::traits::SensorData;
-
-pub type SensorDataChunk<T> = Vec<T>;
+use super::traits::Data;
 
 #[derive(Debug)]
-pub struct OwnedSensorData {
+pub struct OwnedData {
     metric_name: String,
     value: ProtoValue,
     labels: HashMap<String, String>,
 }
 
-impl SensorData for OwnedSensorData {
+impl Data for OwnedData {
     fn metric_name(&self) -> &str {
         &self.metric_name
     }

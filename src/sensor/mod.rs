@@ -1,7 +1,7 @@
 mod traits;
+pub use traits::Data as SensorData;
+pub use traits::Reader as SensorReader;
 pub use traits::Sensor;
-pub use traits::SensorData;
-pub use traits::SensorReader;
 
 mod impls;
 pub use impls::MockSensor;

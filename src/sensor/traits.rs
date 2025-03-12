@@ -11,8 +11,8 @@ pub trait Sensor: Sync + Send {
 }
 
 #[async_trait]
-pub trait SensorReader: Sync + Send + 'static {
-    type Data: SensorData;
+pub trait Reader: Sync + Send + 'static {
+    type Data: Data;
 
     fn name(&self) -> &str;
     fn id(&self) -> &str;
@@ -20,7 +20,7 @@ pub trait SensorReader: Sync + Send + 'static {
     async fn read(&self) -> Result<Vec<Self::Data>>;
 }
 
-pub trait SensorData: Sync + Send + Debug + Sized + 'static {
+pub trait Data: Sync + Send + Debug + Sized + 'static {
     fn metric_name(&self) -> &str;
 
     fn value(&self) -> ProtoValue;
