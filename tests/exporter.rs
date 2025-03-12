@@ -1,3 +1,7 @@
+use std::sync::Arc;
+
+use async_trait::async_trait;
+
 use omni_exporter::error::Result;
 use omni_exporter::exporter::Collector;
 use omni_exporter::exporter::ExtCollector;
@@ -9,8 +13,6 @@ use omni_exporter::storage::ExtSlotGetter;
 use omni_exporter::storage::ExtStorageReader;
 use omni_exporter::storage::PlainText;
 use omni_exporter::storage::PlainTextSlot;
-use std::sync::Arc;
-
 fn env_setup() {
     env_logger::init();
 }
@@ -85,17 +87,19 @@ impl TestSensorReader {
     }
 }
 
+#[async_trait]
 impl SensorReader for TestSensorReader {
     type Slot = PlainTextSlot;
     type Storage = PlainText;
 
-    fn read(&self) -> Result<Self::Storage> {
+    async fn read(&self) -> Result<Self::Storage> {
         Ok(PlainText::new())
     }
 }
 
+#[async_trait]
 impl ExtSensorReader for TestSensorReader {
-    fn read(&self) -> Result<Box<dyn ExtStorageReader>> {
+    async fn read(&self) -> Result<Box<dyn ExtStorageReader>> {
         Ok(Box::new(TestStorage::new()))
     }
 }

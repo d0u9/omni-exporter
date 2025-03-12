@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 use crate::error::Result;
 use crate::sensor::SensorReader;
 use crate::storage::PlainText;
@@ -11,11 +13,12 @@ impl MockReader {
     }
 }
 
+#[async_trait]
 impl SensorReader for MockReader {
     type Slot = PlainTextSlot;
     type Storage = PlainText;
 
-    fn read(&self) -> Result<Self::Storage> {
+    async fn read(&self) -> Result<Self::Storage> {
         let storage = PlainText::new();
         Ok(storage)
     }

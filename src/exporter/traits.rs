@@ -2,6 +2,7 @@ use crate::sensor::ExtSensorReader;
 use crate::sensor::SensorReader;
 use crate::storage::SlotGetter;
 use crate::storage::StorageReader;
+
 pub trait Collector<L, S>
 where
     L: SlotGetter,

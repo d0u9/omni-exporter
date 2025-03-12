@@ -1,5 +1,3 @@
-use super::super::Collector;
-use super::super::traits::ExtCollector;
 use crate::error::Result;
 use crate::sensor::ExtSensorReader;
 use crate::sensor::PlainTextAdapter;
@@ -10,6 +8,10 @@ use crate::storage::PlainText;
 use crate::storage::PlainTextSlot;
 use crate::storage::SlotGetter;
 use crate::storage::StorageReader;
+
+use super::super::traits::Collector;
+use super::super::traits::ExtCollector;
+
 pub struct Simple {
     sensors: Vec<Box<dyn SensorReader<Slot = InternalSlot, Storage = InternalStorage>>>,
     ext_sensors: Vec<Box<dyn ExtSensorReader>>,
@@ -25,9 +27,9 @@ impl Simple {
 }
 
 impl Simple {
-    pub async fn scrape_internal(&self) -> Result<String> {
+    async fn scrape_internal(&self) -> Result<String> {
         for sensor in self.sensors.iter() {
-            let storage = sensor.read()?;
+            let storage = sensor.read().await?;
             let slots = storage.into_slots();
             for slot in slots {
                 println!("slot: {}", slot.get_metric_name());
@@ -36,9 +38,9 @@ impl Simple {
         Ok("".to_string())
     }
 
-    pub async fn scrape_ext(&self) -> Result<String> {
+    async fn scrape_ext(&self) -> Result<String> {
         for sensor in self.ext_sensors.iter() {
-            let storage = sensor.read()?;
+            let storage = sensor.read().await?;
             let slots = storage.slots();
             for slot in slots {
                 println!("slot: {}", slot.get_metric_name());
