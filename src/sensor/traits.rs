@@ -29,7 +29,7 @@ pub trait Data: Sync + Send + Debug + Sized + 'static {
 
     fn labels(&self) -> impl Iterator<Item = (&str, &str)>;
 
-    fn from_proto<P>(proto: P) -> Result<Self>
+    fn from_proto<P>(proto: &P) -> Result<Self>
     where
         P: ProtoItem + Send + Sync + 'static;
 }

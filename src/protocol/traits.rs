@@ -32,4 +32,8 @@ where
     }
 }
 
-pub trait Reader: Iterator {}
+pub trait Reader {
+    type Item;
+
+    fn iter(&self) -> impl Iterator<Item = &Self::Item>;
+}

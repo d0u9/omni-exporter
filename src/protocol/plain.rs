@@ -43,15 +43,13 @@ impl<I: ItemGetter> Writer<I> for Plain {
     }
 }
 
-impl Iterator for Plain {
+impl Reader for Plain {
     type Item = PlainItem;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        self.items.pop()
+    fn iter(&self) -> impl Iterator<Item = &Self::Item> {
+        self.items.iter()
     }
 }
-
-impl Reader for Plain {}
 
 pub struct PlainItem {
     metric_name: String,

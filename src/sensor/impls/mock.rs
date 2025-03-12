@@ -7,6 +7,7 @@ use rand::Rng;
 use crate::error::Result;
 use crate::exotic::uuid;
 use crate::protocol::ItemSetter;
+use crate::protocol::Reader as ProtoReader;
 use crate::protocol::Value as ProtoValue;
 use crate::protocol::Writer as ProtoWriter;
 use crate::protocol::plain::Plain as Proto;
@@ -109,7 +110,10 @@ where
 
     async fn read(&self) -> Result<Vec<T>> {
         let proto = self.gen_mock_data();
-        Ok(proto.map(|item| T::from_proto(item).unwrap()).collect())
+        Ok(proto
+            .iter()
+            .map(|item| T::from_proto(item).unwrap())
+            .collect())
     }
 }
 

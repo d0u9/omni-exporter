@@ -26,7 +26,7 @@ impl Data for OwnedData {
         self.labels.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }
 
-    fn from_proto<P>(proto: P) -> Result<Self>
+    fn from_proto<P>(proto: &P) -> Result<Self>
     where
         P: ProtoItem + Send + Sync + 'static,
     {
