@@ -9,7 +9,7 @@ use omni_exporter::exporter::SimpleExporter;
 use omni_exporter::sensor::ExtSensorReader;
 use omni_exporter::sensor::MockReader;
 use omni_exporter::sensor::SensorReader;
-use omni_exporter::storage::ExtSlotGetter;
+use omni_exporter::storage::SlotGetter;
 use omni_exporter::storage::ExtStorageReader;
 use omni_exporter::storage::PlainText;
 use omni_exporter::storage::PlainTextSlot;
@@ -45,7 +45,7 @@ pub struct TestSlot {
     inner: Arc<TestSlotInner>,
 }
 
-impl ExtSlotGetter for TestSlot {
+impl SlotGetter for TestSlot {
     fn get_metric_name(&self) -> &str {
         &self.inner.metric_name
     }
@@ -68,11 +68,11 @@ impl TestStorage {
 }
 
 impl ExtStorageReader for TestStorage {
-    fn slots<'a>(&'a self) -> Box<dyn Iterator<Item = Box<dyn ExtSlotGetter + 'a>>> {
+    fn slots<'a>(&'a self) -> Box<dyn Iterator<Item = Box<dyn SlotGetter + 'a>>> {
         let iter = self.slots.clone();
         Box::new(
             iter.into_iter()
-                .map(|slot| Box::new(slot) as Box<dyn ExtSlotGetter + 'a>),
+                .map(|slot| Box::new(slot) as Box<dyn SlotGetter + 'a>),
         )
     }
 }

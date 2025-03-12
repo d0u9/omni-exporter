@@ -1,5 +1,4 @@
 mod traits;
-pub use traits::ExtSlotGetter;
 pub use traits::ExtStorageReader;
 pub use traits::SlotGetter;
 pub use traits::StorageReader;
