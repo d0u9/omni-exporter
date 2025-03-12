@@ -1,7 +1,5 @@
 use crate::error::Result;
 use crate::sensor::SensorReader;
-use crate::storage::InternalSlot;
-use crate::storage::InternalStorage;
 use crate::storage::PlainText;
 use crate::storage::PlainTextSlot;
 
@@ -14,11 +12,11 @@ impl MockReader {
 }
 
 impl SensorReader for MockReader {
-    type Slot = InternalSlot;
-    type Storage = InternalStorage;
+    type Slot = PlainTextSlot;
+    type Storage = PlainText;
 
     fn read(&self) -> Result<Self::Storage> {
         let storage = PlainText::new();
-        Ok(InternalStorage::PlainText(storage))
+        Ok(storage)
     }
 }

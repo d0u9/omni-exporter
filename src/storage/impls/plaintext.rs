@@ -17,7 +17,11 @@ pub struct PlainText {
 
 impl PlainText {
     pub fn new() -> Self {
-        Self { slots: vec![] }
+        Self {
+            slots: vec![PlainTextSlot {
+                metric_name: "plain_text".to_string(),
+            }],
+        }
     }
 }
 
