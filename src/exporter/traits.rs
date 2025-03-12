@@ -12,7 +12,7 @@ pub trait Exporter {
     fn scrape(&self) -> impl Future<Output = Result<Self::Metrics>> + Send;
 }
 
-pub trait Collector<D, I>
+pub trait Collector<D, I = Vec<D>>
 where
     D: SensorData + 'static,
     I: IntoIterator<Item = D> + 'static,

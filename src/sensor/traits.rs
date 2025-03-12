@@ -11,7 +11,7 @@ pub trait Sensor: Sync + Send {
 }
 
 #[async_trait]
-pub trait Reader<T, I>: Sync + Send + 'static
+pub trait Reader<T, I = Vec<T>>: Sync + Send + 'static
 where
     T: Data + Sized,
     I: IntoIterator<Item = T>,
