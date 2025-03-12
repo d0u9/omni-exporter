@@ -13,7 +13,7 @@ pub trait Exporter {
 }
 
 pub trait Collector<D: SensorData> {
-    fn add_sensor<T: SensorReader<Data = D> + Send + 'static>(&mut self, sensor: T);
+    fn add_sensor<T: SensorReader<D> + Send + 'static>(&mut self, sensor: T);
 }
 
 pub trait Chip {

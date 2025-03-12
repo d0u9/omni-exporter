@@ -63,7 +63,7 @@ impl MetricTrait for Metric {
 // SimpleExporter schedules grabing data from sensors synchronously.
 // Each time the scrape() method is called, it will read data from all sensors and return the result.
 pub struct Simple<D: SensorData> {
-    sensors: HashMap<String, Box<dyn SensorReader<Data = D> + Send + Sync>>,
+    sensors: HashMap<String, Box<dyn SensorReader<D> + Send + Sync>>,
 }
 
 impl<D: SensorData + 'static> Default for Simple<D> {
@@ -105,7 +105,7 @@ impl<D: SensorData + 'static> Exporter for Simple<D> {
 impl<D: SensorData + 'static> Collector<D> for Simple<D> {
     fn add_sensor<T>(&mut self, sensor_reader: T)
     where
-        T: SensorReader<Data = D> + Send + Sync + Sized,
+        T: SensorReader<D> + Send + Sync + Sized,
     {
         self.sensors
             .insert(sensor_reader.name().to_string(), Box::new(sensor_reader));

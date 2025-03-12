@@ -95,12 +95,10 @@ impl<T> SensorReaderImpl<T> {
 }
 
 #[async_trait]
-impl<T> Reader for SensorReaderImpl<T>
+impl<T> Reader<T> for SensorReaderImpl<T>
 where
     T: Data + Send + Sync + 'static,
 {
-    type Data = T;
-
     fn name(&self) -> &str {
         self.name
     }
@@ -109,11 +107,9 @@ where
         &self.id
     }
 
-    async fn read(&self) -> Result<Vec<Self::Data>> {
+    async fn read(&self) -> Result<Vec<T>> {
         let proto = self.gen_mock_data();
-        Ok(proto
-            .map(|item| Self::Data::from_proto(item).unwrap())
-            .collect())
+        Ok(proto.map(|item| T::from_proto(item).unwrap()).collect())
     }
 }
 

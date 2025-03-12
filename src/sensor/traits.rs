@@ -11,13 +11,14 @@ pub trait Sensor: Sync + Send {
 }
 
 #[async_trait]
-pub trait Reader: Sync + Send + 'static {
-    type Data: Data;
-
+pub trait Reader<T>: Sync + Send + 'static
+where
+    T: Data + Sized,
+{
     fn name(&self) -> &str;
     fn id(&self) -> &str;
 
-    async fn read(&self) -> Result<Vec<Self::Data>>;
+    async fn read(&self) -> Result<Vec<T>>;
 }
 
 pub trait Data: Sync + Send + Debug + Sized + 'static {
