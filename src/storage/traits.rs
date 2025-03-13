@@ -9,5 +9,5 @@ pub trait StorageReader {
 }
 
 pub trait ExtStorageReader {
-    fn slots<'a>(&'a self) -> Box<dyn Iterator<Item = Box<dyn SlotGetter + 'a>>>;
+    fn slots<'a>(&'a self) -> Box<dyn Iterator<Item = Box<dyn SlotGetter + 'a>> + 'a>;
 }

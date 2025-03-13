@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
 
 use omni_exporter::error::Result;
@@ -9,10 +7,10 @@ use omni_exporter::exporter::SimpleExporter;
 use omni_exporter::sensor::ExtSensorReader;
 use omni_exporter::sensor::MockReader;
 use omni_exporter::sensor::SensorReader;
-use omni_exporter::storage::SlotGetter;
 use omni_exporter::storage::ExtStorageReader;
 use omni_exporter::storage::PlainText;
 use omni_exporter::storage::PlainTextSlot;
+use omni_exporter::storage::SlotGetter;
 fn env_setup() {
     env_logger::init();
 }
@@ -36,18 +34,15 @@ async fn exporter_simple_test() {
 }
 
 ////////////////////////////////////////////////////////////
-pub struct TestSlotInner {
-    metric_name: String,
-}
 
 #[derive(Clone)]
 pub struct TestSlot {
-    inner: Arc<TestSlotInner>,
+    metric_name: String,
 }
 
-impl SlotGetter for TestSlot {
+impl<'a> SlotGetter for &'a TestSlot {
     fn get_metric_name(&self) -> &str {
-        &self.inner.metric_name
+        &self.metric_name
     }
 }
 
@@ -58,22 +53,40 @@ pub struct TestStorage {
 impl TestStorage {
     pub fn new() -> Self {
         Self {
-            slots: vec![TestSlot {
-                inner: Arc::new(TestSlotInner {
-                    metric_name: "test_test".to_string(),
-                }),
-            }],
+            slots: vec![
+                TestSlot {
+                    metric_name: "test_test-1".to_string(),
+                },
+                TestSlot {
+                    metric_name: "test_test-2".to_string(),
+                },
+            ],
         }
     }
 }
 
+struct TestIter<'a> {
+    pos: usize,
+    slots: &'a Vec<TestSlot>,
+}
+
+impl<'a> Iterator for TestIter<'a> {
+    type Item = Box<dyn SlotGetter + 'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.slots.get(self.pos).map(|slot| {
+            self.pos += 1;
+            Box::new(slot) as Box<dyn SlotGetter + 'a>
+        })
+    }
+}
+
 impl ExtStorageReader for TestStorage {
-    fn slots<'a>(&'a self) -> Box<dyn Iterator<Item = Box<dyn SlotGetter + 'a>>> {
-        let iter = self.slots.clone();
-        Box::new(
-            iter.into_iter()
-                .map(|slot| Box::new(slot) as Box<dyn SlotGetter + 'a>),
-        )
+    fn slots<'a>(&'a self) -> Box<dyn Iterator<Item = Box<dyn SlotGetter + 'a>> + 'a> {
+        Box::new(TestIter {
+            pos: 0,
+            slots: &self.slots,
+        })
     }
 }
 
