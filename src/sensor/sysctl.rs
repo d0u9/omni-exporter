@@ -18,9 +18,9 @@ impl SensorReader for SysctlReader {
 
     async fn read(&self) -> Result<Self::Metrics> {
         Ok(Metrics::from_vec(vec![
-            Metric::new(MetricValue::U64(1)),
-            Metric::new(MetricValue::U64(2)),
-            Metric::new(MetricValue::U64(3)),
+            Metric::new("sysctl_a", MetricValue::U64(1)),
+            Metric::new("sysctl_b", MetricValue::U64(2)),
+            Metric::new("sysctl_c", MetricValue::U64(3)),
         ]))
     }
 }

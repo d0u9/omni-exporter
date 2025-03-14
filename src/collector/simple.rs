@@ -20,7 +20,7 @@ impl SimpleCollector {
         let mut metrics = Metrics::new();
         for sensor in &self.sensors {
             match sensor {
-                Sensor::System(sensor) => {
+                Sensor::Core(sensor) => {
                     let m = sensor.read().await?;
                     metrics.extend(m);
                 }

@@ -1,8 +1,8 @@
 use crate::metric::Metrics;
-use crate::sensor::{SensorReader, SysctlReader, SystemReader};
+use crate::sensor::{CoreReader, SensorReader, SysctlReader};
 
 pub enum Sensor {
-    System(SystemReader),
+    Core(CoreReader),
     Sysctl(SysctlReader),
     External(Box<dyn SensorReader<Metrics = Metrics>>),
 }

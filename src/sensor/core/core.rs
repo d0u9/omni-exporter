@@ -1,10 +1,12 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use crate::error::{Error, Result};
 use crate::fetcher::Meminfo;
-use crate::metric::{MetricFamily, MetricType, Metrics};
+use crate::metric::{MetricFamily, Metrics};
 use crate::sensor::SensorReader;
 use async_trait::async_trait;
+
+use super::meminfo;
 
 enum FamilyNames {
     Memory,
@@ -24,45 +26,16 @@ impl FamilyNames {
     }
 }
 
-enum MemoryLabelKeys {
-    Label1,
-    Label2,
-}
-
-impl MemoryLabelKeys {
-    const LABEL1: &str = "label1";
-    const LABEL2: &str = "label2";
-
-    fn to_str(&self) -> &'static str {
-        match self {
-            MemoryLabelKeys::Label1 => Self::LABEL1,
-            MemoryLabelKeys::Label2 => Self::LABEL2,
-        }
-    }
-
-    fn list_all() -> &'static [&'static str; 2] {
-        &[Self::LABEL1, Self::LABEL2]
-    }
-}
-
-pub struct SystemReader {
+pub struct CoreReader {
     meminfo: Meminfo,
-    metric_families: HashMap<String, MetricFamily>,
+    metric_families: HashMap<String, &'static MetricFamily>,
 }
 
-impl SystemReader {
+impl CoreReader {
     pub fn new() -> Self {
-        SystemReader {
+        CoreReader {
             meminfo: Meminfo::new(),
-            metric_families: HashMap::from([(
-                FamilyNames::Memory.to_string(),
-                MetricFamily::new(
-                    FamilyNames::Memory.to_string(),
-                    "Memory information".to_string(),
-                    MetricType::Gauge,
-                    HashSet::from_iter(MemoryLabelKeys::list_all().iter().map(|s| s.to_string())),
-                ),
-            )]),
+            metric_families: HashMap::from([(FamilyNames::Memory.to_string(), meminfo::family())]),
         }
     }
 
@@ -90,7 +63,7 @@ impl SystemReader {
 }
 
 #[async_trait]
-impl SensorReader for SystemReader {
+impl SensorReader for CoreReader {
     type Metrics = Metrics;
 
     async fn read(&self) -> Result<Self::Metrics> {
@@ -104,7 +77,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_system_sensor() {
-        let s = SystemReader::new();
+        let s = CoreReader::new();
         let metrics = s.read().await.unwrap();
         println!("{:?}", metrics);
     }

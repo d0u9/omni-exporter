@@ -41,7 +41,7 @@ impl SensorReader for ExtSensorReader {
         let metrics = self.fetcher.fetch().await?;
         let ret = metrics
             .into_iter()
-            .map(|m| metric::Metric::new(metric::MetricValue::U64(m)))
+            .map(|m| metric::Metric::new("test_metric", metric::MetricValue::U64(m)))
             .collect();
         Ok(ret)
     }

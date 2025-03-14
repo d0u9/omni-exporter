@@ -1,11 +1,51 @@
-use std::borrow::Cow;
-use std::collections::HashSet;
 use std::sync::Arc;
-
+use std::time::Duration;
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
 // https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md
 
-type Timestamp = u64;
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Timestamp {
+    U64(u64),
+    Duration(Duration),
+    None,
+}
+
+impl Timestamp {
+    pub fn now() -> Self {
+        let now = std::time::SystemTime::now();
+        if let Ok(t) = now.duration_since(std::time::UNIX_EPOCH) {
+            Self::Duration(t)
+        } else {
+            Self::None
+        }
+    }
+
+    pub fn into_u64(self) -> Option<u64> {
+        match self {
+            Self::U64(u64) => Some(u64),
+            Self::Duration(d) => Some(d.as_secs()),
+            Self::None => None,
+        }
+    }
+}
+
+impl From<Duration> for Timestamp {
+    fn from(duration: Duration) -> Self {
+        Self::Duration(duration)
+    }
+}
+
+impl From<u64> for Timestamp {
+    fn from(u64: u64) -> Self {
+        Self::U64(u64)
+    }
+}
+
+impl From<Timestamp> for Option<u64> {
+    fn from(timestamp: Timestamp) -> Self {
+        timestamp.into_u64()
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MetricValue {
@@ -26,18 +66,30 @@ impl From<Option<u64>> for MetricValue {
 #[derive(Debug, Clone)]
 pub struct Metric {
     family: Option<Arc<MetricFamilyInner>>,
+    labels: Vec<Label>,
 
+    pub name: &'static str,
     pub value: MetricValue,
-    pub timestamp: Option<Timestamp>,
+    pub timestamp: Timestamp,
 }
 
 impl Metric {
-    pub fn new(value: MetricValue) -> Self {
+    pub fn new(name: &'static str, value: MetricValue) -> Self {
         Self {
+            name,
             value,
-            timestamp: None,
+            timestamp: Timestamp::None,
             family: None,
+            labels: vec![],
         }
+    }
+
+    pub fn set_timestamp(&mut self, timestamp: Timestamp) {
+        self.timestamp = timestamp;
+    }
+
+    pub fn add_label(&mut self, key: &'static str, value: String) {
+        self.labels.push(Label { key, value });
     }
 }
 
@@ -50,42 +102,29 @@ pub enum MetricType {
     Untyped,
 }
 
-type LabelKey<'a> = Cow<'a, str>;
+type LabelKey = &'static str;
 type LabelValue = String;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Label<'a> {
-    key: LabelKey<'a>,
+pub struct Label {
+    key: LabelKey,
     value: LabelValue,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct LabelSet<'a> {
-    inner: HashSet<LabelKey<'a>>,
-}
-
-impl<'a> LabelSet<'a> {
-    pub fn from_vec(label_keys: Vec<LabelKey<'a>>) -> Self {
-        Self {
-            inner: label_keys.into_iter().collect(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
 struct MetricFamilyInner {
-    name: String,
-    help: String,
+    name: &'static str,
+    help: &'static str,
     metric_type: MetricType,
-    label_set: HashSet<String>,
+    label_set: &'static [&'static str],
 }
 
 impl MetricFamilyInner {
     pub fn new(
-        name: String,
-        help: String,
+        name: &'static str,
+        help: &'static str,
         metric_type: MetricType,
-        label_set: HashSet<String>,
+        label_set: &'static [&'static str],
     ) -> Self {
         Self {
             name,
@@ -102,10 +141,10 @@ pub struct MetricFamily {
 
 impl MetricFamily {
     pub fn new(
-        name: String,
-        help: String,
+        name: &'static str,
+        help: &'static str,
         metric_type: MetricType,
-        label_set: HashSet<String>,
+        label_set: &'static [&'static str],
     ) -> Self {
         Self {
             inner: Arc::new(MetricFamilyInner::new(name, help, metric_type, label_set)),
@@ -153,7 +192,32 @@ impl AsMut<Vec<Metric>> for Metrics {
 
 impl std::fmt::Debug for Metrics {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Metrics")
+        writeln!(f, "Metrics: {{")?;
+        for metric in &self.0 {
+            write!(f, "    {:?}, {:?}", metric.name, metric.value)?;
+            if let Some(ts) = metric.timestamp.into_u64() {
+                write!(f, ", {:?}", ts)?;
+            } else {
+                write!(f, ", NoTimestamp")?;
+            }
+            if !metric.labels.is_empty() {
+                write!(f, ", Labels: [")?;
+                for label in &metric.labels {
+                    write!(f, "{:?}: {:?}, ", label.key, label.value)?;
+                }
+                write!(f, "]")?;
+            }
+            if let Some(family) = &metric.family {
+                write!(
+                    f,
+                    ", Family: [{:?}, {:?}, {:?}]",
+                    family.name, family.help, family.metric_type
+                )?;
+            }
+            writeln!(f)?;
+        }
+        writeln!(f, "}}")?;
+        Ok(())
     }
 }
 

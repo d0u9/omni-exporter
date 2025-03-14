@@ -1,5 +1,5 @@
-mod system;
-pub use system::SystemReader;
+mod core;
+pub use core::CoreReader;
 
 mod sysctl;
 pub use sysctl::SysctlReader;
