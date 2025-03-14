@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 use crate::error::Result;
 use crate::fetcher::Meminfo;
-use crate::sensor::traits::SensorReader;
-use crate::types::{Metric, MetricLabels};
+use crate::sensor::InternalSensorReader;
+use crate::types::Metric;
 
 pub struct SystemReader {
     meminfo: Meminfo,
@@ -29,7 +29,7 @@ impl SystemReader {
 }
 
 #[async_trait]
-impl SensorReader for SystemReader {
+impl InternalSensorReader for SystemReader {
     type Labels = HashMap<String, String>;
     type Metrics = Vec<Metric<Self::Labels>>;
 
@@ -39,12 +39,6 @@ impl SensorReader for SystemReader {
         self.update_meminfo(&mut metrics).await?;
 
         Ok(metrics)
-    }
-}
-
-impl MetricLabels for HashMap<String, String> {
-    fn labels(&self) -> impl Iterator<Item = (&str, &str)> {
-        self.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }
 }
 

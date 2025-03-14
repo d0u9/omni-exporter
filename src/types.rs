@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum MetricValue {
@@ -49,5 +51,27 @@ where
 }
 
 pub trait MetricLabels {
-    fn labels(&self) -> impl Iterator<Item = (&str, &str)>;
+    fn labels_ref(&self) -> impl Iterator<Item = (&str, &str)>;
+
+    fn labels(self) -> impl Iterator<Item = (String, String)>;
+}
+
+impl MetricLabels for Vec<(String, String)> {
+    fn labels_ref<'a>(&'a self) -> impl Iterator<Item = (&'a str, &'a str)> {
+        self.iter().map(|(k, v)| (k.as_str(), v.as_str()))
+    }
+
+    fn labels(self) -> impl Iterator<Item = (String, String)> {
+        self.into_iter().map(|(k, v)| (k, v))
+    }
+}
+
+impl MetricLabels for HashMap<String, String> {
+    fn labels_ref(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.iter().map(|(k, v)| (k.as_str(), v.as_str()))
+    }
+
+    fn labels(self) -> impl Iterator<Item = (String, String)> {
+        self.into_iter().map(|(k, v)| (k, v))
+    }
 }

@@ -4,7 +4,7 @@ use crate::error::Result;
 use crate::types::{Metric, MetricLabels};
 
 #[async_trait]
-pub trait SensorReader {
+pub trait InternalSensorReader {
     type Labels: MetricLabels;
     type Metrics: IntoIterator<Item = Metric<Self::Labels>>;
 

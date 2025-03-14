@@ -5,3 +5,7 @@ pub mod fetcher;
 pub mod sensor;
 
 pub mod types;
+
+pub mod collector;
+
+pub mod metric;

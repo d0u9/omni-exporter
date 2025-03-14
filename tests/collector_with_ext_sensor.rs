@@ -1,6 +1,9 @@
 use async_trait::async_trait;
 
+use omni_exporter::collector::Sensor;
+use omni_exporter::collector::SimpleCollector;
 use omni_exporter::error::Result;
+use omni_exporter::sensor::SystemReader;
 use omni_exporter::sensor::{Labels, SensorReader};
 use omni_exporter::types::{Metric, MetricType, MetricValue};
 
@@ -9,14 +12,21 @@ fn env_setup() {
 }
 
 #[tokio::test]
-async fn exporter_simple_test() {
+async fn collector_with_ext_sensor_test() {
     env_setup();
-    log::info!("test custom sensor");
+    log::info!("collector_with_ext_sensor_test");
+
+    let mut collector = SimpleCollector::new();
 
     let sensor = ExtSensorReader::new();
-    let metrics = sensor.update().await.unwrap();
+    collector.add_sensor(Sensor::External(Box::new(sensor)));
 
-    log::info!("metrics: {:?}", metrics);
+    let sensor = SystemReader::new();
+    collector.add_sensor(Sensor::System(sensor));
+
+    let metrics = collector.collect().await.unwrap();
+
+    log::info!("result: {:?}", metrics);
 }
 
 ////////////////////////////////////////////////////////////
