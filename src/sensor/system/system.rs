@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::error::{Error, Result};
 use crate::fetcher::Meminfo;
-use crate::metric::{Metric, MetricFamily, MetricType};
+use crate::metric::{MetricFamily, MetricType, Metrics};
 use crate::sensor::SensorReader;
 use async_trait::async_trait;
 
@@ -66,7 +66,7 @@ impl SystemReader {
         }
     }
 
-    async fn meminfo(&self) -> Result<Vec<Metric>> {
+    async fn meminfo(&self) -> Result<Metrics> {
         let famliy = self
             .metric_families
             .get(FamilyNames::Memory.to_str())
@@ -74,23 +74,24 @@ impl SystemReader {
                 "memory metric family not found".to_string(),
             ))?;
         let meminfo = self.meminfo.get_meminfo().await?;
-        let mut metrics: Vec<Metric> = meminfo.into();
+        let mut metrics = Metrics::from(meminfo);
         metrics
+            .as_mut()
             .iter_mut()
             .for_each(|metric| famliy.tag_metric(metric));
         Ok(metrics)
     }
 
-    async fn read_all(&self) -> Result<Vec<Metric>> {
+    async fn read_all(&self) -> Result<Metrics> {
         let mut metrics = Vec::new();
         metrics.extend(self.meminfo().await?);
-        Ok(metrics)
+        Ok(Metrics::from_vec(metrics))
     }
 }
 
 #[async_trait]
 impl SensorReader for SystemReader {
-    type Metrics = Vec<Metric>;
+    type Metrics = Metrics;
 
     async fn read(&self) -> Result<Self::Metrics> {
         self.read_all().await

@@ -5,6 +5,7 @@ use omni_exporter::collector::SimpleCollector;
 use omni_exporter::error::Result;
 use omni_exporter::metric::Metric;
 use omni_exporter::metric::MetricValue;
+use omni_exporter::metric::Metrics;
 use omni_exporter::sensor::SensorReader;
 use omni_exporter::sensor::SystemReader;
 
@@ -46,7 +47,7 @@ impl ExtSensorReader {
 
 #[async_trait]
 impl SensorReader for ExtSensorReader {
-    type Metrics = Vec<Metric>;
+    type Metrics = Metrics;
 
     async fn read(&self) -> Result<Self::Metrics> {
         let metrics = self.fetcher.fetch().await?;
@@ -54,7 +55,7 @@ impl SensorReader for ExtSensorReader {
             .into_iter()
             .map(|m| Metric::new(MetricValue::U64(m)))
             .collect();
-        Ok(ret)
+        Ok(Metrics::from_vec(ret))
     }
 }
 

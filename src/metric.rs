@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::collections::HashSet;
 use std::sync::Arc;
+
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
 // https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md
 
@@ -117,55 +118,58 @@ impl MetricFamily {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[derive(Clone)]
+pub struct Metrics(Vec<Metric>);
 
-    #[test]
-    fn test_metric() {
-        let metric = Metric {
-            value: MetricValue::U64(1),
-            timestamp: Some(1),
-            family: None,
-        };
-        assert_eq!(metric.value, MetricValue::U64(1));
-        assert_eq!(metric.timestamp, Some(1));
-        assert!(metric.family.is_none());
-
-        let family = MetricFamily::new(
-            "test_family".to_string(),
-            "test_help".to_string(),
-            MetricType::Counter,
-            HashSet::from_iter(vec![]),
-        );
-        let mut metric = metric;
-        family.tag_metric(&mut metric);
-        assert!(metric.family.is_some());
-        assert!(metric.family.unwrap() == family.inner);
+impl Metrics {
+    pub fn new() -> Self {
+        Self(Vec::new())
     }
 
-    #[test]
-    fn test_metric_family() {
-        let metric_family = MetricFamily::new(
-            "test_family".to_string(),
-            "test_help".to_string(),
-            MetricType::Counter,
-            HashSet::from_iter(vec![]),
-        );
-        assert_eq!(metric_family.inner.label_set.len(), 0);
-        assert_eq!(metric_family.inner.help, "test_help");
-        assert_eq!(metric_family.inner.metric_type, MetricType::Counter);
+    pub fn from_vec(metrics: Vec<Metric>) -> Self {
+        Self(metrics)
     }
 
-    #[test]
-    fn test_label_set() {
-        let key1 = "key1";
-        let key2 = "key2";
-        let keys = [Cow::Borrowed(key1), Cow::Borrowed(key2)];
+    pub fn extend(&mut self, metrics: Metrics) {
+        self.0.extend(metrics.0);
+    }
 
-        let label_set = LabelSet::from_vec(vec![keys[0].clone(), keys[1].clone()]);
-        assert_eq!(label_set.inner.len(), 2);
-        assert_eq!(label_set.inner.contains(&keys[0]), true);
-        assert_eq!(label_set.inner.contains(&keys[1]), true);
+    pub fn extend_with_vec(&mut self, metrics: Vec<Metric>) {
+        self.0.extend(metrics);
     }
 }
+
+impl AsRef<Vec<Metric>> for Metrics {
+    fn as_ref(&self) -> &Vec<Metric> {
+        &self.0
+    }
+}
+
+impl AsMut<Vec<Metric>> for Metrics {
+    fn as_mut(&mut self) -> &mut Vec<Metric> {
+        &mut self.0
+    }
+}
+
+impl std::fmt::Debug for Metrics {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Metrics")
+    }
+}
+
+impl IntoIterator for Metrics {
+    type Item = Metric;
+    type IntoIter = std::vec::IntoIter<Metric>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+////////////////////////////////////////////////////////////
+/// Unit Test
+////////////////////////////////////////////////////////////
+
+#[cfg(test)]
+#[path = "metric_test.rs"]
+mod tests;
