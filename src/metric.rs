@@ -163,17 +163,6 @@ mod tests {
         let key2 = "key2";
         let keys = [Cow::Borrowed(key1), Cow::Borrowed(key2)];
 
-        let values = vec![
-            Label {
-                key: keys[0].clone(),
-                value: "value1".to_string(),
-            },
-            Label {
-                key: keys[1].clone(),
-                value: "value2".to_string(),
-            },
-        ];
-
         let label_set = LabelSet::from_vec(vec![keys[0].clone(), keys[1].clone()]);
         assert_eq!(label_set.inner.len(), 2);
         assert_eq!(label_set.inner.contains(&keys[0]), true);
