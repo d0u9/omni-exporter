@@ -2,13 +2,14 @@ use std::collections::HashMap;
 use std::vec;
 
 use crate::fetcher::MeminfoMetrics;
-use crate::types::{Metric, MetricType};
+use crate::metric::{Metric, MetricType, MetricValue};
 
-impl From<MeminfoMetrics> for Vec<Metric<HashMap<String, String>>> {
+impl From<MeminfoMetrics> for Vec<Metric<'static>> {
     fn from(meminfo: MeminfoMetrics) -> Self {
-        vec![Metric::new_with_no_labels(
-            MetricType::Gauge,
-            meminfo.mem_free_bytes.into(),
+        vec![Metric::new(
+            MetricValue::U64(meminfo.mem_free_bytes.unwrap_or(0)),
+            None,
+            None,
         )]
     }
-}
+} 

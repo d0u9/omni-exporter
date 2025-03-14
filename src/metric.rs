@@ -1,40 +1,47 @@
 use std::borrow::Cow;
-
-
+use std::collections::HashSet;
+use std::sync::Arc;
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
 // https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md
 
 type Timestamp = u64;
 
-#[derive(Debug, PartialEq)]
-enum MetricValue {
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum MetricValue {
     U64(u64),
     F64(f64),
+    None,
 }
 
-struct Metric<'a> {
-    family: Option<&'a MetricFamily<'a>>,
+impl From<Option<u64>> for MetricValue {
+    fn from(value: Option<u64>) -> Self {
+        match value {
+            Some(v) => MetricValue::U64(v),
+            None => MetricValue::None,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Metric {
+    family: Option<Arc<MetricFamilyInner>>,
 
     pub value: MetricValue,
     pub timestamp: Option<Timestamp>,
 }
 
-impl<'a> Metric<'a> {
-    fn new(
-        value: MetricValue,
-        timestamp: Option<Timestamp>,
-        family: Option<&'a MetricFamily<'a>>,
-    ) -> Self {
+impl Metric {
+    pub fn new(value: MetricValue) -> Self {
         Self {
-            family,
             value,
-            timestamp,
+            timestamp: None,
+            family: None,
         }
     }
 }
 
-#[derive(PartialEq, Debug)]
-enum MetricType {
+#[derive(Debug, Clone, PartialEq)]
+pub enum MetricType {
     Counter,
     Gauge,
     Histogram,
@@ -43,43 +50,70 @@ enum MetricType {
 }
 
 type LabelKey<'a> = Cow<'a, str>;
-type LabelValue<'a> = Cow<'a, str>;
+type LabelValue = String;
 
-#[derive(PartialEq)]
-struct Label<'a> {
+#[derive(Debug, Clone, PartialEq)]
+pub struct Label<'a> {
     key: LabelKey<'a>,
-    value: LabelValue<'a>,
+    value: LabelValue,
 }
 
-#[derive(PartialEq)]
-struct LabelSet<'a> {
-    labels: Vec<Label<'a>>,
+#[derive(Debug, Clone, PartialEq)]
+pub struct LabelSet<'a> {
+    inner: HashSet<LabelKey<'a>>,
 }
 
 impl<'a> LabelSet<'a> {
-    fn new(labels: Vec<Label<'a>>) -> Self {
-        Self { labels }
+    pub fn from_vec(label_keys: Vec<LabelKey<'a>>) -> Self {
+        Self {
+            inner: label_keys.into_iter().collect(),
+        }
     }
 }
 
-#[derive(PartialEq)]
-struct MetricFamily<'a> {
-    pub label_set: LabelSet<'a>,
-    pub help: Cow<'a, str>,
-    pub metric_type: MetricType,
+#[derive(Debug, Clone, PartialEq)]
+struct MetricFamilyInner {
+    name: String,
+    help: String,
+    metric_type: MetricType,
+    label_set: HashSet<String>,
 }
 
-impl<'a> MetricFamily<'a> {
-    fn new(label_set: LabelSet<'a>, help: Cow<'a, str>, metric_type: MetricType) -> Self {
+impl MetricFamilyInner {
+    pub fn new(
+        name: String,
+        help: String,
+        metric_type: MetricType,
+        label_set: HashSet<String>,
+    ) -> Self {
         Self {
-            label_set,
+            name,
             help,
             metric_type,
+            label_set,
+        }
+    }
+}
+
+pub struct MetricFamily {
+    inner: Arc<MetricFamilyInner>,
+}
+
+impl MetricFamily {
+    pub fn new(
+        name: String,
+        help: String,
+        metric_type: MetricType,
+        label_set: HashSet<String>,
+    ) -> Self {
+        Self {
+            inner: Arc::new(MetricFamilyInner::new(name, help, metric_type, label_set)),
         }
     }
 
-    fn tag_metric<'b>(&'b self, metric: &mut Metric<'b>) {
-        metric.family = Some(self);
+    pub fn tag_metric(&self, metric: &mut Metric) {
+        log::info!("tag_metric: {:?}", self.inner);
+        metric.family = Some(self.inner.clone());
     }
 }
 
@@ -99,24 +133,28 @@ mod tests {
         assert!(metric.family.is_none());
 
         let family = MetricFamily::new(
-            LabelSet::new(vec![]),
-            Cow::Borrowed("test"),
+            "test_family".to_string(),
+            "test_help".to_string(),
             MetricType::Counter,
+            HashSet::from_iter(vec![]),
         );
         let mut metric = metric;
         family.tag_metric(&mut metric);
         assert!(metric.family.is_some());
-        assert!(metric.family.unwrap() == &family);
+        assert!(metric.family.unwrap() == family.inner);
     }
 
     #[test]
     fn test_metric_family() {
-        let label_set = LabelSet::new(vec![]);
-        let metric_family =
-            MetricFamily::new(label_set, Cow::Borrowed("test"), MetricType::Counter);
-        assert_eq!(metric_family.label_set.labels.len(), 0);
-        assert_eq!(metric_family.help, "test");
-        assert_eq!(metric_family.metric_type, MetricType::Counter);
+        let metric_family = MetricFamily::new(
+            "test_family".to_string(),
+            "test_help".to_string(),
+            MetricType::Counter,
+            HashSet::from_iter(vec![]),
+        );
+        assert_eq!(metric_family.inner.label_set.len(), 0);
+        assert_eq!(metric_family.inner.help, "test_help");
+        assert_eq!(metric_family.inner.metric_type, MetricType::Counter);
     }
 
     #[test]
@@ -128,19 +166,17 @@ mod tests {
         let values = vec![
             Label {
                 key: keys[0].clone(),
-                value: Cow::Owned("value1".to_string()),
+                value: "value1".to_string(),
             },
             Label {
                 key: keys[1].clone(),
-                value: Cow::Borrowed("value2"),
+                value: "value2".to_string(),
             },
         ];
 
-        let label_set = LabelSet::new(values);
-        assert_eq!(label_set.labels.len(), 2);
-        assert_eq!(label_set.labels[0].key, "key1");
-        assert_eq!(label_set.labels[0].value, "value1");
-        assert_eq!(label_set.labels[1].key, "key2");
-        assert_eq!(label_set.labels[1].value, "value2");
+        let label_set = LabelSet::from_vec(vec![keys[0].clone(), keys[1].clone()]);
+        assert_eq!(label_set.inner.len(), 2);
+        assert_eq!(label_set.inner.contains(&keys[0]), true);
+        assert_eq!(label_set.inner.contains(&keys[1]), true);
     }
 }

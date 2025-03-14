@@ -1,12 +1,11 @@
 use async_trait::async_trait;
 
 use crate::error::Result;
-use crate::types::{Metric, MetricLabels};
+use crate::metric;
 
 #[async_trait]
-pub trait InternalSensorReader {
-    type Labels: MetricLabels;
-    type Metrics: IntoIterator<Item = Metric<Self::Labels>>;
+pub trait SensorReader {
+    type Metrics: IntoIterator<Item = metric::Metric>;
 
-    async fn update(&self) -> Result<Self::Metrics>;
+    async fn read(&self) -> Result<Self::Metrics>;
 }

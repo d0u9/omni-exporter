@@ -1,8 +1,8 @@
 use crate::collector::types::Sensor;
 use crate::error::Result;
-use crate::sensor::InternalSensorReader;
-use crate::types::Metric;
-use crate::types::MetricLabels;
+use crate::metric::Metric;
+use crate::sensor::SensorReader;
+
 pub struct SimpleCollector {
     sensors: Vec<Sensor>,
 }
@@ -16,25 +16,17 @@ impl SimpleCollector {
         self.sensors.push(sensor);
     }
 
-    pub async fn collect(&self) -> Result<Vec<Metric<Vec<(String, String)>>>> {
+    pub async fn collect(&self) -> Result<Vec<Metric>> {
         let mut metrics = Vec::new();
         for sensor in &self.sensors {
             match sensor {
                 Sensor::System(sensor) => {
-                    let m = sensor.update().await?;
-                    metrics.extend(m.into_iter().map(|metric| Metric {
-                        mtype: metric.mtype,
-                        value: metric.value,
-                        labels: metric.labels.labels().collect(),
-                    }));
+                    let m = sensor.read().await?;
+                    metrics.extend(m);
                 }
                 Sensor::External(sensor) => {
-                    let m = sensor.update().await?;
-                    metrics.extend(m.into_iter().map(|metric| Metric {
-                        mtype: metric.mtype,
-                        value: metric.value,
-                        labels: metric.labels.labels().collect(),
-                    }));
+                    let m = sensor.read().await?;
+                    metrics.extend(m);
                 }
             }
         }

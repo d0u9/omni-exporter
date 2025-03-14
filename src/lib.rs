@@ -4,7 +4,7 @@ pub mod fetcher;
 
 pub mod sensor;
 
-pub mod types;
+//pub mod types;
 
 pub mod collector;
 

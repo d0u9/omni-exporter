@@ -1,5 +1,4 @@
 mod system;
 pub use system::SystemReader;
 
-mod traits;
-pub use traits::SensorReader;
+mod from;
