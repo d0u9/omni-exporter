@@ -1,2 +1,2 @@
-pub mod sysinfo;
+pub mod system;
 pub mod uuid;

@@ -4,6 +4,7 @@ use std::fmt;
 pub enum Error {
     InvalidInput,
     NotFound,
+    NotImplemented,
     CustomError(String),
 }
 
@@ -12,6 +13,7 @@ impl fmt::Display for Error {
         match *self {
             Error::InvalidInput => write!(f, "Invalid input provided"),
             Error::NotFound => write!(f, "Resource not found"),
+            Error::NotImplemented => write!(f, "Not implemented"),
             Error::CustomError(ref err) => write!(f, "Error: {}", err),
         }
     }

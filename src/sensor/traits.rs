@@ -1,19 +1,12 @@
 use async_trait::async_trait;
 
 use crate::error::Result;
-use crate::storage::ExtStorageReader;
-use crate::storage::SlotGetter;
-use crate::storage::StorageReader;
+use crate::types::{Metric, MetricLabels};
 
 #[async_trait]
-pub trait SensorReader: Send + Sync {
-    type Slot: SlotGetter;
-    type Storage: StorageReader<Slot = Self::Slot>;
+pub trait SensorReader {
+    type Labels: MetricLabels;
+    type Metrics: IntoIterator<Item = Metric<Self::Labels>>;
 
-    async fn read(&self) -> Result<Self::Storage>;
-}
-
-#[async_trait]
-pub trait ExtSensorReader {
-    async fn read(&self) -> Result<Box<dyn ExtStorageReader>>;
+    async fn update(&self) -> Result<Self::Metrics>;
 }
