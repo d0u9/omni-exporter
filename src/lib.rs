@@ -2,6 +2,6 @@ pub mod error;
 pub mod exotic;
 pub mod fetcher;
 
-mod sensor;
+pub mod sensor;
 
-mod types;
+pub mod types;

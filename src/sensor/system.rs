@@ -18,6 +18,16 @@ impl SystemReader {
     }
 }
 
+type Labels = HashMap<String, String>;
+type Metrics = Vec<Metric<Labels>>;
+
+impl SystemReader {
+    async fn update_meminfo(&self, metrics: &mut Metrics) -> Result<()> {
+        metrics.extend::<Vec<_>>(self.meminfo.get_meminfo().await?.into());
+        Ok(())
+    }
+}
+
 #[async_trait]
 impl SensorReader for SystemReader {
     type Labels = HashMap<String, String>;
@@ -26,9 +36,7 @@ impl SensorReader for SystemReader {
     async fn update(&self) -> Result<Self::Metrics> {
         let mut metrics = Self::Metrics::new();
 
-        if let Ok(meminfo_metrics) = self.meminfo.get_meminfo().await {
-            metrics.extend::<Vec<_>>(meminfo_metrics.into());
-        }
+        self.update_meminfo(&mut metrics).await?;
 
         Ok(metrics)
     }
