@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 
-use uuid::Uuid;
 
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
 // https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md
@@ -13,18 +12,18 @@ enum MetricValue {
     F64(f64),
 }
 
-struct Metric<'a, const N: usize> {
-    pub family: Option<&'a MetricFamily<'a, N>>,
+struct Metric<'a> {
+    family: Option<&'a MetricFamily<'a>>,
 
     pub value: MetricValue,
     pub timestamp: Option<Timestamp>,
 }
 
-impl<'a, const N: usize> Metric<'a, N> {
+impl<'a> Metric<'a> {
     fn new(
         value: MetricValue,
         timestamp: Option<Timestamp>,
-        family: Option<&'a MetricFamily<'a, N>>,
+        family: Option<&'a MetricFamily<'a>>,
     ) -> Self {
         Self {
             family,
@@ -46,48 +45,41 @@ enum MetricType {
 type LabelKey<'a> = Cow<'a, str>;
 type LabelValue<'a> = Cow<'a, str>;
 
+#[derive(PartialEq)]
 struct Label<'a> {
     key: LabelKey<'a>,
     value: LabelValue<'a>,
 }
 
-struct LabelSet<'a, const N: usize> {
-    keys: &'a [LabelKey<'a>; N],
-    values: Vec<Label<'a>>,
+#[derive(PartialEq)]
+struct LabelSet<'a> {
+    labels: Vec<Label<'a>>,
 }
 
-impl<'a, const N: usize> LabelSet<'a, N> {
-    fn new(keys: &'a [LabelKey<'a>; N], values: Vec<Label<'a>>) -> Self {
-        Self { keys, values }
+impl<'a> LabelSet<'a> {
+    fn new(labels: Vec<Label<'a>>) -> Self {
+        Self { labels }
     }
 }
 
-struct MetricFamily<'a, const N: usize> {
-    uuid: Uuid,
-
-    pub label_set: LabelSet<'a, N>,
+#[derive(PartialEq)]
+struct MetricFamily<'a> {
+    pub label_set: LabelSet<'a>,
     pub help: Cow<'a, str>,
     pub metric_type: MetricType,
 }
 
-impl<'a, const N: usize> MetricFamily<'a, N> {
-    fn new(label_set: LabelSet<'a, N>, help: Cow<'a, str>, metric_type: MetricType) -> Self {
+impl<'a> MetricFamily<'a> {
+    fn new(label_set: LabelSet<'a>, help: Cow<'a, str>, metric_type: MetricType) -> Self {
         Self {
-            uuid: Uuid::new_v4(),
             label_set,
             help,
             metric_type,
         }
     }
 
-    fn tag_metric<'b>(&'b self, metric: &mut Metric<'b, N>) {
+    fn tag_metric<'b>(&'b self, metric: &mut Metric<'b>) {
         metric.family = Some(self);
-    }
-}
-
-impl<'a, const N: usize> PartialEq for MetricFamily<'a, N> {
-    fn eq(&self, other: &Self) -> bool {
-        self.uuid == other.uuid
     }
 }
 
@@ -107,7 +99,7 @@ mod tests {
         assert!(metric.family.is_none());
 
         let family = MetricFamily::new(
-            LabelSet::new(&[], vec![]),
+            LabelSet::new(vec![]),
             Cow::Borrowed("test"),
             MetricType::Counter,
         );
@@ -119,11 +111,10 @@ mod tests {
 
     #[test]
     fn test_metric_family() {
-        let label_set = LabelSet::new(&[], vec![]);
+        let label_set = LabelSet::new(vec![]);
         let metric_family =
             MetricFamily::new(label_set, Cow::Borrowed("test"), MetricType::Counter);
-        assert_eq!(metric_family.label_set.keys.len(), 0);
-        assert_eq!(metric_family.label_set.values.len(), 0);
+        assert_eq!(metric_family.label_set.labels.len(), 0);
         assert_eq!(metric_family.help, "test");
         assert_eq!(metric_family.metric_type, MetricType::Counter);
     }
@@ -145,12 +136,11 @@ mod tests {
             },
         ];
 
-        let label_set = LabelSet::new(&keys, values);
-        assert_eq!(label_set.keys.len(), 2);
-        assert_eq!(label_set.values.len(), 2);
-        assert_eq!(label_set.values[0].key, "key1");
-        assert_eq!(label_set.values[0].value, "value1");
-        assert_eq!(label_set.values[1].key, "key2");
-        assert_eq!(label_set.values[1].value, "value2");
+        let label_set = LabelSet::new(values);
+        assert_eq!(label_set.labels.len(), 2);
+        assert_eq!(label_set.labels[0].key, "key1");
+        assert_eq!(label_set.labels[0].value, "value1");
+        assert_eq!(label_set.labels[1].key, "key2");
+        assert_eq!(label_set.labels[1].value, "value2");
     }
 }
