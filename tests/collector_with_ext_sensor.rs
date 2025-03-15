@@ -14,12 +14,15 @@ use omni_exporter::sensor::SensorReader;
 use omni_exporter::sensor::SysctlReader;
 
 fn env_setup() {
-    env_logger::init();
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .init();
 }
 
 #[tokio::test]
 async fn collector_with_ext_sensor_test() {
     env_setup();
+
     log::info!("collector_with_ext_sensor_test");
 
     let mut collector = SimpleCollector::new();

@@ -176,6 +176,10 @@ impl Metrics {
     pub fn extend_with_vec(&mut self, metrics: Vec<Metric>) {
         self.0.extend(metrics);
     }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Metric> {
+        self.0.iter_mut()
+    }
 }
 
 impl AsRef<Vec<Metric>> for Metrics {
@@ -233,7 +237,6 @@ impl IntoIterator for Metrics {
 ////////////////////////////////////////////////////////////
 /// Unit Test
 ////////////////////////////////////////////////////////////
-
 #[cfg(test)]
 #[path = "metric_test.rs"]
 mod tests;

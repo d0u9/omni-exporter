@@ -1,8 +1,9 @@
 use std::sync::OnceLock;
-use std::vec;
 
-use crate::fetcher::MeminfoMetrics;
-use crate::metric::{Metric, MetricFamily, MetricType, Metrics};
+use crate::error::Result;
+use crate::fetcher::Meminfo as Fetcher;
+use crate::fetcher::Metric as MeminfoMetric;
+use crate::metric::{Metric, MetricFamily, MetricType, Metrics, Timestamp};
 
 pub fn family() -> &'static MetricFamily {
     static METRIC_FAMILY: OnceLock<MetricFamily> = OnceLock::new();
@@ -17,14 +18,15 @@ pub fn family() -> &'static MetricFamily {
 }
 
 #[allow(dead_code)]
-pub enum MetricNames {
-    MemFreeBytes,
-}
-
-#[allow(dead_code)]
 pub enum LabelKeys {
     Label1,
     Label2,
+}
+
+impl AsRef<str> for LabelKeys {
+    fn as_ref(&self) -> &str {
+        self.to_str()
+    }
 }
 
 impl LabelKeys {
@@ -43,21 +45,51 @@ impl LabelKeys {
     }
 }
 
-impl MetricNames {
-    const MEM_FREE_BYTES: &str = "mem_free_bytes";
-
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            MetricNames::MemFreeBytes => Self::MEM_FREE_BYTES,
-        }
+impl From<Vec<MeminfoMetric>> for Metrics {
+    fn from(meminfo: Vec<MeminfoMetric>) -> Self {
+        Metrics::from_vec(
+            meminfo
+                .into_iter()
+                .map(|m| Metric::new(m.name.into(), m.value.into()))
+                .collect(),
+        )
     }
 }
 
-impl From<MeminfoMetrics> for Metrics {
-    fn from(meminfo: MeminfoMetrics) -> Self {
-        Metrics::from_vec(vec![Metric::new(
-            MetricNames::MemFreeBytes.to_str(),
-            meminfo.mem_free_bytes.into(),
-        )])
+pub struct Meminfo;
+
+impl Meminfo {
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    pub async fn get_meminfo(&self) -> Result<Metrics> {
+        let fetcher = Self::fetcher()?;
+        let mut metrics: Metrics = fetcher.get_meminfo().await?.into();
+        metrics.iter_mut().for_each(|m| {
+            family().tag_metric(m);
+            if m.timestamp == Timestamp::None {
+                m.timestamp = Timestamp::now();
+            }
+        });
+        Ok(metrics)
+    }
+
+    fn fetcher() -> Result<&'static Fetcher> {
+        static METRIC_FAMILY: OnceLock<Fetcher> = OnceLock::new();
+        let fetcher = METRIC_FAMILY.get_or_init(|| Fetcher::new());
+        Ok(fetcher)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_meminfo() {
+        let meminfo = Meminfo::new();
+        let metrics = meminfo.get_meminfo().await.unwrap();
+        println!("{:?}", metrics);
     }
 }
