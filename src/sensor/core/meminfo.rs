@@ -5,13 +5,25 @@ use crate::fetcher::Meminfo as Fetcher;
 use crate::fetcher::Metric as MeminfoMetric;
 use crate::metric::{Metric, MetricFamily, MetricType, Metrics, Timestamp};
 
-pub fn family() -> &'static MetricFamily {
+pub fn family_guage() -> &'static MetricFamily {
     static METRIC_FAMILY: OnceLock<MetricFamily> = OnceLock::new();
     METRIC_FAMILY.get_or_init(|| {
         MetricFamily::new(
             "meminfo",
             "Memory information",
             MetricType::Gauge,
+            LabelKeys::list_all(),
+        )
+    })
+}
+
+pub fn family_counter() -> &'static MetricFamily {
+    static METRIC_FAMILY: OnceLock<MetricFamily> = OnceLock::new();
+    METRIC_FAMILY.get_or_init(|| {
+        MetricFamily::new(
+            "meminfo",
+            "Memory information",
+            MetricType::Counter,
             LabelKeys::list_all(),
         )
     })
@@ -67,12 +79,20 @@ impl Meminfo {
         let fetcher = Self::fetcher()?;
         let mut metrics: Metrics = fetcher.get_meminfo().await?.into();
         metrics.iter_mut().for_each(|m| {
-            family().tag_metric(m);
+            Self::tag_metric(m);
             if m.timestamp == Timestamp::None {
                 m.timestamp = Timestamp::now();
             }
         });
         Ok(metrics)
+    }
+
+    fn tag_metric(metric: &mut Metric) {
+        if metric.name.ends_with("_total") {
+            family_counter().tag_metric(metric);
+        } else {
+            family_guage().tag_metric(metric);
+        }
     }
 
     fn fetcher() -> Result<&'static Fetcher> {

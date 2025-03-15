@@ -5,6 +5,7 @@ pub enum Error {
     InvalidInput,
     NotFound,
     NotImplemented,
+    FFIError(String),
     CustomError(String),
 }
 
@@ -15,6 +16,7 @@ impl fmt::Display for Error {
             Error::NotFound => write!(f, "Resource not found"),
             Error::NotImplemented => write!(f, "Not implemented"),
             Error::CustomError(ref err) => write!(f, "Error: {}", err),
+            Error::FFIError(ref err) => write!(f, "FFI error: {}", err),
         }
     }
 }

@@ -1,31 +1,70 @@
 use crate::error::Result;
-use crate::exotic::system as syslib;
 use crate::metric::MetricValue;
+
+use crate::ffi;
 
 use super::Metric;
 
-pub struct MeminfoInner {
-    inner: syslib::System,
-}
+pub struct MeminfoInner;
 
 impl MeminfoInner {
     pub fn new() -> Self {
-        let sys = syslib::System::new();
-        Self::new_with_system(sys)
-    }
-
-    pub fn new_with_system(sys: syslib::System) -> Self {
-        Self { inner: sys }
+        Self {}
     }
 
     pub async fn get_meminfo(&self) -> Result<Vec<Metric>> {
-        let mut metrics = Vec::new();
+        let meminfo = ffi::macos::meminfo::get_meminfo()?;
 
-        let m = self.inner.free_memory().await;
-        metrics.push(Metric {
-            name: MetricNames::FreeBytes,
-            value: MetricValue::U64(m),
-        });
+        let metrics = vec![
+            Metric {
+                name: MetricNames::FreeBytes,
+                value: MetricValue::U64(meminfo.free_bytes),
+            },
+            Metric {
+                name: MetricNames::ActiveBytes,
+                value: MetricValue::U64(meminfo.active_bytes),
+            },
+            Metric {
+                name: MetricNames::CompressedBytes,
+                value: MetricValue::U64(meminfo.compressed_bytes),
+            },
+            Metric {
+                name: MetricNames::InactiveBytes,
+                value: MetricValue::U64(meminfo.inactive_bytes),
+            },
+            Metric {
+                name: MetricNames::WiredBytes,
+                value: MetricValue::U64(meminfo.wired_bytes),
+            },
+            Metric {
+                name: MetricNames::SwappedInBytesTotal,
+                value: MetricValue::U64(meminfo.swapped_in_bytes_total),
+            },
+            Metric {
+                name: MetricNames::SwappedOutBytesTotal,
+                value: MetricValue::U64(meminfo.swapped_out_bytes_total),
+            },
+            Metric {
+                name: MetricNames::InternalBytes,
+                value: MetricValue::U64(meminfo.internal_bytes),
+            },
+            Metric {
+                name: MetricNames::PurgeableBytes,
+                value: MetricValue::U64(meminfo.purgeable_bytes),
+            },
+            Metric {
+                name: MetricNames::TotalBytes,
+                value: MetricValue::U64(meminfo.total_bytes),
+            },
+            Metric {
+                name: MetricNames::SwapUsedBytes,
+                value: MetricValue::U64(meminfo.swap_used_bytes),
+            },
+            Metric {
+                name: MetricNames::SwapTotalBytes,
+                value: MetricValue::U64(meminfo.swap_total_bytes),
+            },
+        ];
 
         Ok(metrics)
     }
