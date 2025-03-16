@@ -5,27 +5,24 @@ use crate::fetcher::Meminfo as Fetcher;
 use crate::fetcher::Metric as MeminfoMetric;
 use crate::metric::{Metric, MetricFamily, MetricType, Metrics, Timestamp};
 
+struct Constants;
+
+impl Constants {
+    const FAMILY_NAMESPACE: &str = "node";
+    const FAMILY_NAME: &str = "meminfo";
+    const FAMILY_HELP_PREFIX: &str = "Memory information field";
+}
+
 pub struct Family;
 
 impl Family {
-    pub fn get(metric_type: MetricType) -> &'static MetricFamily {
-        match metric_type {
-            MetricType::Gauge => Self::guage(),
-            MetricType::Counter => Self::counter(),
-            _ => panic!("Unsupported metric type: {:?}", metric_type),
-        }
-    }
-
-    pub fn with_help<T: ToString>(metric_type: MetricType, help: T) -> MetricFamily {
-        Self::get(metric_type).dup_with_help(help)
-    }
-
     pub fn guage() -> &'static MetricFamily {
         static METRIC_FAMILY: OnceLock<MetricFamily> = OnceLock::new();
         METRIC_FAMILY.get_or_init(|| {
-            MetricFamily::new(
-                "meminfo",
-                "Memory information",
+            MetricFamily::new_with_namespace(
+                Constants::FAMILY_NAMESPACE,
+                Constants::FAMILY_NAME,
+                Constants::FAMILY_HELP_PREFIX,
                 MetricType::Gauge,
                 LabelKeys::list_all(),
             )
@@ -35,9 +32,10 @@ impl Family {
     pub fn counter() -> &'static MetricFamily {
         static METRIC_FAMILY: OnceLock<MetricFamily> = OnceLock::new();
         METRIC_FAMILY.get_or_init(|| {
-            MetricFamily::new(
-                "meminfo",
-                "Memory information",
+            MetricFamily::new_with_namespace(
+                Constants::FAMILY_NAMESPACE,
+                Constants::FAMILY_NAME,
+                Constants::FAMILY_HELP_PREFIX,
                 MetricType::Counter,
                 LabelKeys::list_all(),
             )
@@ -45,12 +43,18 @@ impl Family {
     }
 
     pub fn tag_metric(metric: &mut Metric) {
-        const HELP_PREFIX: &str = "Memory information field";
-
         let family = if metric.name.ends_with("_total") {
-            Self::counter().dup_with_help(format!("{} {}.", HELP_PREFIX, metric.name))
+            Self::counter().dup_with_help(format!(
+                "{} {}.",
+                Constants::FAMILY_HELP_PREFIX,
+                metric.name
+            ))
         } else {
-            Self::guage().dup_with_help(format!("{} {}.", HELP_PREFIX, metric.name))
+            Self::guage().dup_with_help(format!(
+                "{} {}.",
+                Constants::FAMILY_HELP_PREFIX,
+                metric.name
+            ))
         };
         family.tag_metric(metric);
     }

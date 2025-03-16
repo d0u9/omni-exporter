@@ -114,6 +114,7 @@ pub struct Label {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MetricFamily {
+    namespace: Option<&'static str>,
     name: &'static str,
     help: Cow<'static, str>,
     metric_type: MetricType,
@@ -121,6 +122,22 @@ pub struct MetricFamily {
 }
 
 impl MetricFamily {
+    pub fn new_with_namespace(
+        namespace: &'static str,
+        name: &'static str,
+        help: &'static str,
+        metric_type: MetricType,
+        label_set: &'static [&'static str],
+    ) -> Self {
+        Self {
+            namespace: Some(namespace),
+            name,
+            help: Cow::Borrowed(help),
+            metric_type,
+            label_set,
+        }
+    }
+
     pub fn new(
         name: &'static str,
         help: &'static str,
@@ -128,6 +145,7 @@ impl MetricFamily {
         label_set: &'static [&'static str],
     ) -> Self {
         Self {
+            namespace: None,
             name,
             help: Cow::Borrowed(help),
             metric_type,
@@ -137,6 +155,7 @@ impl MetricFamily {
 
     pub fn dup_with_help<T: ToString>(&self, help: T) -> Self {
         Self {
+            namespace: self.namespace,
             name: self.name,
             help: Cow::Owned(help.to_string()),
             metric_type: self.metric_type,
@@ -207,8 +226,8 @@ impl std::fmt::Debug for Metrics {
             if let Some(family) = &metric.family {
                 write!(
                     f,
-                    ", Family: [{:?}, {:?}, {:?}]",
-                    family.name, family.help, family.metric_type
+                    ", Family: [{:?} {:?}, {:?}, {:?}]",
+                    family.namespace, family.name, family.help, family.metric_type
                 )?;
             }
             writeln!(f)?;
