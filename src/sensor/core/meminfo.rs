@@ -5,28 +5,55 @@ use crate::fetcher::Meminfo as Fetcher;
 use crate::fetcher::Metric as MeminfoMetric;
 use crate::metric::{Metric, MetricFamily, MetricType, Metrics, Timestamp};
 
-pub fn family_guage() -> &'static MetricFamily {
-    static METRIC_FAMILY: OnceLock<MetricFamily> = OnceLock::new();
-    METRIC_FAMILY.get_or_init(|| {
-        MetricFamily::new(
-            "meminfo",
-            "Memory information",
-            MetricType::Gauge,
-            LabelKeys::list_all(),
-        )
-    })
-}
+pub struct Family;
 
-pub fn family_counter() -> &'static MetricFamily {
-    static METRIC_FAMILY: OnceLock<MetricFamily> = OnceLock::new();
-    METRIC_FAMILY.get_or_init(|| {
-        MetricFamily::new(
-            "meminfo",
-            "Memory information",
-            MetricType::Counter,
-            LabelKeys::list_all(),
-        )
-    })
+impl Family {
+    pub fn get(metric_type: MetricType) -> &'static MetricFamily {
+        match metric_type {
+            MetricType::Gauge => Self::guage(),
+            MetricType::Counter => Self::counter(),
+            _ => panic!("Unsupported metric type: {:?}", metric_type),
+        }
+    }
+
+    pub fn with_help<T: ToString>(metric_type: MetricType, help: T) -> MetricFamily {
+        Self::get(metric_type).dup_with_help(help)
+    }
+
+    pub fn guage() -> &'static MetricFamily {
+        static METRIC_FAMILY: OnceLock<MetricFamily> = OnceLock::new();
+        METRIC_FAMILY.get_or_init(|| {
+            MetricFamily::new(
+                "meminfo",
+                "Memory information",
+                MetricType::Gauge,
+                LabelKeys::list_all(),
+            )
+        })
+    }
+
+    pub fn counter() -> &'static MetricFamily {
+        static METRIC_FAMILY: OnceLock<MetricFamily> = OnceLock::new();
+        METRIC_FAMILY.get_or_init(|| {
+            MetricFamily::new(
+                "meminfo",
+                "Memory information",
+                MetricType::Counter,
+                LabelKeys::list_all(),
+            )
+        })
+    }
+
+    pub fn tag_metric(metric: &mut Metric) {
+        const HELP_PREFIX: &str = "Memory information field";
+
+        let family = if metric.name.ends_with("_total") {
+            Self::counter().dup_with_help(format!("{} {}.", HELP_PREFIX, metric.name))
+        } else {
+            Self::guage().dup_with_help(format!("{} {}.", HELP_PREFIX, metric.name))
+        };
+        family.tag_metric(metric);
+    }
 }
 
 #[allow(dead_code)]
@@ -79,20 +106,12 @@ impl Meminfo {
         let fetcher = Self::fetcher()?;
         let mut metrics: Metrics = fetcher.get_meminfo().await?.into();
         metrics.iter_mut().for_each(|m| {
-            Self::tag_metric(m);
+            Family::tag_metric(m);
             if m.timestamp == Timestamp::None {
                 m.timestamp = Timestamp::now();
             }
         });
         Ok(metrics)
-    }
-
-    fn tag_metric(metric: &mut Metric) {
-        if metric.name.ends_with("_total") {
-            family_counter().tag_metric(metric);
-        } else {
-            family_guage().tag_metric(metric);
-        }
     }
 
     fn fetcher() -> Result<&'static Fetcher> {

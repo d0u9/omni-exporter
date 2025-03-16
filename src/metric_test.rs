@@ -17,16 +17,16 @@ fn test_metric() {
     let mut metric = metric;
     family.tag_metric(&mut metric);
     assert!(metric.family.is_some());
-    assert!(metric.family.unwrap() == family.inner);
+    assert!(metric.family.unwrap() == family);
 }
 
 #[test]
 fn test_metric_family() {
     let metric_family =
         MetricFamily::new("test_family", "test_help", MetricType::Counter, &["a", "b"]);
-    assert_eq!(metric_family.inner.label_set.len(), 2);
-    assert_eq!(metric_family.inner.help, "test_help");
-    assert_eq!(metric_family.inner.metric_type, MetricType::Counter);
+    assert_eq!(metric_family.label_set.len(), 2);
+    assert_eq!(metric_family.help, "test_help");
+    assert_eq!(metric_family.metric_type, MetricType::Counter);
 }
 
 #[test]

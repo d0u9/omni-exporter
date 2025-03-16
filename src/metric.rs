@@ -1,5 +1,6 @@
-use std::sync::Arc;
+use std::borrow::Cow;
 use std::time::Duration;
+
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
 // https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md
 
@@ -65,7 +66,7 @@ impl From<Option<u64>> for MetricValue {
 
 #[derive(Debug, Clone)]
 pub struct Metric {
-    family: Option<Arc<MetricFamilyInner>>,
+    family: Option<MetricFamily>,
     labels: Vec<Label>,
 
     pub name: &'static str,
@@ -93,7 +94,7 @@ impl Metric {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MetricType {
     Counter,
     Gauge,
@@ -112,31 +113,11 @@ pub struct Label {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct MetricFamilyInner {
+pub struct MetricFamily {
     name: &'static str,
-    help: &'static str,
+    help: Cow<'static, str>,
     metric_type: MetricType,
     label_set: &'static [&'static str],
-}
-
-impl MetricFamilyInner {
-    pub fn new(
-        name: &'static str,
-        help: &'static str,
-        metric_type: MetricType,
-        label_set: &'static [&'static str],
-    ) -> Self {
-        Self {
-            name,
-            help,
-            metric_type,
-            label_set,
-        }
-    }
-}
-
-pub struct MetricFamily {
-    inner: Arc<MetricFamilyInner>,
 }
 
 impl MetricFamily {
@@ -147,13 +128,25 @@ impl MetricFamily {
         label_set: &'static [&'static str],
     ) -> Self {
         Self {
-            inner: Arc::new(MetricFamilyInner::new(name, help, metric_type, label_set)),
+            name,
+            help: Cow::Borrowed(help),
+            metric_type,
+            label_set,
+        }
+    }
+
+    pub fn dup_with_help<T: ToString>(&self, help: T) -> Self {
+        Self {
+            name: self.name,
+            help: Cow::Owned(help.to_string()),
+            metric_type: self.metric_type,
+            label_set: self.label_set,
         }
     }
 
     pub fn tag_metric(&self, metric: &mut Metric) {
-        log::info!("tag_metric: {:?}", self.inner);
-        metric.family = Some(self.inner.clone());
+        log::info!("tag_metric: {:?}", self);
+        metric.family = Some(self.clone());
     }
 }
 
