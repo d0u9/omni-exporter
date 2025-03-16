@@ -3,7 +3,6 @@ use std::path::Path;
 use super::internal::fs;
 
 pub const DEFAULT_MOUNT_POINT: &str = fs::consts::DEFAULT_PROC_MOUNT_POINT;
-pub const SECTOR_SIZE: usize = 512;
 
 pub struct FS {
     pub(super) proc: fs::FS,

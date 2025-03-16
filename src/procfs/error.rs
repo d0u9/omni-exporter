@@ -4,6 +4,7 @@ use std::fmt;
 pub enum Error {
     ParseStringErr(String),
     IOError(String),
+    InvalidIndex(String),
 }
 
 impl fmt::Display for Error {
@@ -11,6 +12,7 @@ impl fmt::Display for Error {
         match *self {
             Error::ParseStringErr(ref err) => write!(f, "Parsing String Error: {}", err),
             Error::IOError(ref err) => write!(f, "IO Error: {}", err),
+            Error::InvalidIndex(ref err) => write!(f, "Invalid Index: {}", err),
         }
     }
 }
@@ -28,5 +30,11 @@ impl From<std::num::ParseIntError> for Error {
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
         Error::IOError(err.to_string())
+    }
+}
+
+impl From<std::num::ParseFloatError> for Error {
+    fn from(err: std::num::ParseFloatError) -> Self {
+        Error::ParseStringErr(err.to_string())
     }
 }
