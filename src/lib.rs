@@ -4,7 +4,7 @@ pub mod fetcher;
 pub mod metric;
 pub mod sensor;
 
-mod exotic;
+// mod exotic;
 mod ffi;
 
 #[cfg(target_os = "linux")]

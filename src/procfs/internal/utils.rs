@@ -2,7 +2,7 @@ use std::path::Path;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 
-use crate::error::Result;
+use super::super::error::Result;
 
 // ReadFileNoStat uses io.ReadAll to read contents of entire file.
 // This is similar to os.ReadFile but without the call to os.Stat, because

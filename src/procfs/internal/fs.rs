@@ -1,8 +1,6 @@
 // https://github.com/prometheus/procfs/blob/master/internal/fs/fs.go
 use std::path::{Path, PathBuf};
 
-use crate::error::Result;
-
 pub mod consts {
     // DEFAULT_PROC_MOUNT_POINT is the common mount point of the proc filesystem.
     pub const DEFAULT_PROC_MOUNT_POINT: &str = "/proc";
@@ -24,9 +22,9 @@ pub struct FS {
 }
 
 impl FS {
-    pub fn new<T: AsRef<Path>>(mount_point: T) -> Result<Self> {
+    pub fn new<T: AsRef<Path>>(mount_point: T) -> Self {
         let inner = mount_point.as_ref().to_owned();
-        Ok(Self { inner })
+        Self { inner }
     }
 
     pub fn path<P: AsRef<Path>>(&self, p: P) -> PathBuf {

@@ -7,6 +7,7 @@ pub enum Error {
     NotImplemented,
     FFIError(String),
     CustomError(String),
+    ProcfsError(String),
 }
 
 impl fmt::Display for Error {
@@ -17,6 +18,7 @@ impl fmt::Display for Error {
             Error::NotImplemented => write!(f, "Not implemented"),
             Error::CustomError(ref err) => write!(f, "Error: {}", err),
             Error::FFIError(ref err) => write!(f, "FFI error: {}", err),
+            Error::ProcfsError(ref err) => write!(f, "Procfs error: {}", err),
         }
     }
 }
@@ -24,3 +26,10 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+#[cfg(target_os = "linux")]
+impl From<crate::procfs::Error> for Error {
+    fn from(err: crate::procfs::Error) -> Self {
+        Error::ProcfsError(err.to_string())
+    }
+}
