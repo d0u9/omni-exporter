@@ -5,36 +5,40 @@
 #![allow(dead_code)]
 #![allow(unsafe_code)]
 #![allow(unsafe_op_in_unsafe_fn)]
+#![allow(unknown_lints)]
 
 extern crate libc;
 
 use crate::error::{Error, Result};
 use std::mem;
 
-include!(concat!(env!("OUT_DIR"), "/ffi/macos/meminfo.rs"));
+#[allow(clippy::all)]
+mod bindgen {
+    include!(concat!(env!("OUT_DIR"), "/ffi/macos/meminfo.rs"));
+}
 
-unsafe fn get_vmstat() -> Result<(u64, vm_statistics64_data_t)> {
-    let host = unsafe { mach_host_self() };
-    let mut vmstat: vm_statistics64_data_t = unsafe { mem::zeroed() };
+unsafe fn get_vmstat() -> Result<(u64, bindgen::vm_statistics64_data_t)> {
+    let host = unsafe { bindgen::mach_host_self() };
+    let mut vmstat: bindgen::vm_statistics64_data_t = unsafe { mem::zeroed() };
     let mut info_count = libc::HOST_VM_INFO64_COUNT;
     let ret = unsafe {
-        host_statistics64(
+        bindgen::host_statistics64(
             host,
-            HOST_VM_INFO64 as i32,
+            bindgen::HOST_VM_INFO64 as i32,
             &mut vmstat as *mut _ as *mut _,
             &mut info_count as *mut _,
         )
     };
-    if ret != KERN_SUCCESS as i32 {
+    if ret != bindgen::KERN_SUCCESS as i32 {
         return Err(Error::FFIError(format!(
             "host_statistics64 failed: {}",
             ret
         )));
     }
 
-    let mut page_size: vm_size_t = 0;
-    let ret = unsafe { host_page_size(host, &mut page_size) };
-    if ret != KERN_SUCCESS as i32 {
+    let mut page_size: bindgen::vm_size_t = 0;
+    let ret = unsafe { bindgen::host_page_size(host, &mut page_size) };
+    if ret != bindgen::KERN_SUCCESS as i32 {
         return Err(Error::FFIError(format!("host_page_size failed: {}", ret)));
     }
 
@@ -49,15 +53,15 @@ pub fn get_meminfo() -> Result<MemInfo> {
 
     Ok(MemInfo {
         page_size,
-        active_bytes: vmstat.active_count as u64 * page_size as u64,
-        compressed_bytes: vmstat.compressor_page_count as u64 * page_size as u64,
-        inactive_bytes: vmstat.inactive_count as u64 * page_size as u64,
-        wired_bytes: vmstat.wire_count as u64 * page_size as u64,
-        free_bytes: vmstat.free_count as u64 * page_size as u64,
-        swapped_in_bytes_total: vmstat.pageins as u64 * page_size as u64,
-        swapped_out_bytes_total: vmstat.pageouts as u64 * page_size as u64,
-        internal_bytes: vmstat.internal_page_count as u64 * page_size as u64,
-        purgeable_bytes: vmstat.purgeable_count as u64 * page_size as u64,
+        active_bytes: vmstat.active_count as u64 * page_size,
+        compressed_bytes: vmstat.compressor_page_count as u64 * page_size,
+        inactive_bytes: vmstat.inactive_count as u64 * page_size,
+        wired_bytes: vmstat.wire_count as u64 * page_size,
+        free_bytes: vmstat.free_count as u64 * page_size,
+        swapped_in_bytes_total: vmstat.pageins * page_size,
+        swapped_out_bytes_total: vmstat.pageouts * page_size,
+        internal_bytes: vmstat.internal_page_count as u64 * page_size,
+        purgeable_bytes: vmstat.purgeable_count as u64 * page_size,
         total_bytes: 0,
         swap_used_bytes: 0,
         swap_total_bytes: 0,

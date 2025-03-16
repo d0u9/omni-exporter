@@ -1,5 +1,5 @@
-mod meminfo;
-pub use meminfo::{Meminfo, Metric};
+mod meminfo_impl;
+pub use meminfo_impl::{Meminfo, Metric};
 
 #[cfg(target_os = "macos")]
 mod macos;

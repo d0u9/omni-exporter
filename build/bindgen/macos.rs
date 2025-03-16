@@ -22,16 +22,13 @@ fn generate_meminfo_bindings() -> Result<(), Box<dyn Error>> {
             .join(header_name)
             .to_string_lossy()])
         .generate()
-        .expect(&format!(
-            "Unable to generate bindings for src/{}",
-            relative_path
-        ));
+        .unwrap_or_else(|_| panic!("Unable to generate bindings for src/{}", relative_path));
 
     let out_path = PathBuf::from(env::var("OUT_DIR")?).join(relative_path);
     std::fs::create_dir_all(&out_path)?;
     bindings
         .write_to_file(out_path.join(bindings_name))
-        .expect(&format!("Couldn't write bindings: {}", relative_path));
+        .unwrap_or_else(|_| panic!("Couldn't write bindings: {}", relative_path));
 
     Ok(())
 }

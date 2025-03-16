@@ -93,7 +93,7 @@ impl From<Vec<MeminfoMetric>> for Metrics {
         Metrics::from_vec(
             meminfo
                 .into_iter()
-                .map(|m| Metric::new(m.name.into(), m.value.into()))
+                .map(|m| Metric::new(m.name.into(), m.value))
                 .collect(),
         )
     }
@@ -120,7 +120,7 @@ impl Meminfo {
 
     fn fetcher() -> Result<&'static Fetcher> {
         static METRIC_FAMILY: OnceLock<Fetcher> = OnceLock::new();
-        let fetcher = METRIC_FAMILY.get_or_init(|| Fetcher::new());
+        let fetcher = METRIC_FAMILY.get_or_init(Fetcher::new);
         Ok(fetcher)
     }
 }
