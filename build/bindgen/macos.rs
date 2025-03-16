@@ -5,14 +5,24 @@ use std::error::Error;
 use std::path::PathBuf;
 
 pub fn generate_bindings() -> Result<(), Box<dyn Error>> {
-    generate_meminfo_bindings()
-}
-
-fn generate_meminfo_bindings() -> Result<(), Box<dyn Error>> {
     let relative_path = "ffi/macos";
     let header_name = "meminfo.h";
     let bindings_name = "meminfo.rs";
+    do_generate_bindings(relative_path, header_name, bindings_name)?;
 
+    let relative_path = "ffi/macos";
+    let header_name = "cpu.h";
+    let bindings_name = "cpu.rs";
+    do_generate_bindings(relative_path, header_name, bindings_name)?;
+
+    Ok(())
+}
+
+fn do_generate_bindings(
+    relative_path: &str,
+    header_name: &str,
+    bindings_name: &str,
+) -> Result<(), Box<dyn Error>> {
     let cargo_root = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
 
     let bindings = bindgen::Builder::default()

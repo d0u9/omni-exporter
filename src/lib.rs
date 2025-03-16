@@ -6,3 +6,6 @@ pub mod sensor;
 
 mod exotic;
 mod ffi;
+
+#[cfg(target_os = "linux")]
+mod procfs;
