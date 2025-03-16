@@ -14,7 +14,7 @@ An exporter built for resource-constrained systems.
 
 [dependencies]
 log = { version = "0.4" }
-tokio = { version = "1", features = ["rt", "macros", "sync"] }
+tokio = { version = "1", features = ["rt", "macros", "sync", "fs", "io-util"] }
 uuid = { version = "1.15.1", features = ["v4"] }
 sysinfo = { version =  "0.33.1" }
 async-trait = "0.1"

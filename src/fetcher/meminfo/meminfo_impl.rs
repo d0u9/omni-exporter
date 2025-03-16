@@ -48,6 +48,8 @@ mod tests {
 
         let metrics = meminfo.get_meminfo().await.unwrap();
         assert!(metrics.len() > 0);
+
+        #[cfg(target_os = "macos")]
         assert!(metrics.iter().any(|m| m.name == MetricNames::FreeBytes));
 
         println!("{:?}", metrics);

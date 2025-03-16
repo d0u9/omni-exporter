@@ -2,6 +2,8 @@ use crate::error::Result;
 use crate::exotic::system as syslib;
 use crate::metric::MetricValue;
 
+use super::Metric;
+
 pub struct MeminfoInner {
     inner: syslib::System,
 }
@@ -132,40 +134,5 @@ impl MetricNames {
             MetricNames::WritebackBytes => "writeback_bytes",
             MetricNames::WritebackTmpBytes => "writeback_tmp_bytes",
         }
-    }
-}
-
-impl AsRef<str> for MetricNames {
-    fn as_ref(&self) -> &'static str {
-        self.to_str()
-    }
-}
-
-impl From<MetricNames> for &'static str {
-    fn from(name: MetricNames) -> Self {
-        name.to_str()
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Metric {
-    pub name: MetricNames,
-    pub value: MetricValue,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_get_meminfo() {
-        let sys = syslib::System::new();
-        let meminfo = Meminfo::new_with_system(sys);
-
-        let metrics = meminfo.get_meminfo().await.unwrap();
-        assert!(metrics.len() > 0);
-        assert!(metrics.iter().any(|m| m.name == MetricNames::MemFreeBytes));
-
-        println!("{:?}", metrics);
     }
 }

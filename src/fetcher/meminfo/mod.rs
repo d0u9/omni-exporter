@@ -3,6 +3,7 @@ pub use meminfo_impl::{Meminfo, Metric};
 
 #[cfg(target_os = "macos")]
 mod macos;
+#[cfg(target_os = "macos")]
 pub use macos::{MeminfoInner, MetricNames};
 
 #[cfg(target_os = "linux")]
