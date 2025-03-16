@@ -159,7 +159,7 @@ impl FS {
 
 #[tokio::test]
 async fn test_meminfo() {
-    let fs = FS::new_default().unwrap();
+    let fs = FS::new_default();
     let meminfo = fs.meminfo().await.unwrap();
     println!("{:?}", meminfo);
 }
