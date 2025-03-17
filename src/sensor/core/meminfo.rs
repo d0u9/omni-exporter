@@ -1,8 +1,8 @@
 use std::sync::OnceLock;
 
 use crate::error::Result;
-use crate::fetcher::Meminfo as Fetcher;
-use crate::fetcher::Metric as MeminfoMetric;
+use crate::fetcher::meminfo::Meminfo as Fetcher;
+use crate::fetcher::meminfo::MeminfoMetric;
 use crate::metric::{Metric, MetricFamily, MetricType, Metrics, Timestamp};
 
 struct Constants;

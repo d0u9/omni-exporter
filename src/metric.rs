@@ -64,6 +64,21 @@ impl From<Option<u64>> for MetricValue {
     }
 }
 
+impl From<Option<f64>> for MetricValue {
+    fn from(value: Option<f64>) -> Self {
+        match value {
+            Some(v) => MetricValue::F64(v),
+            None => MetricValue::None,
+        }
+    }
+}
+
+impl From<f64> for MetricValue {
+    fn from(value: f64) -> Self {
+        MetricValue::F64(value)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Metric {
     family: Option<MetricFamily>,
@@ -82,6 +97,16 @@ impl Metric {
             timestamp: Timestamp::None,
             family: None,
             labels: vec![],
+        }
+    }
+
+    pub fn new_with_labels(name: &'static str, value: MetricValue, labels: Option<Vec<Label>>) -> Self {
+        Self {
+            name,
+            value,
+            timestamp: Timestamp::None,
+            family: None,
+            labels: labels.unwrap_or_default(),
         }
     }
 
@@ -110,6 +135,12 @@ type LabelValue = String;
 pub struct Label {
     key: LabelKey,
     value: LabelValue,
+}
+
+impl Label {
+    pub fn new(key: LabelKey, value: LabelValue) -> Self {
+        Self { key, value }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -164,8 +195,12 @@ impl MetricFamily {
     }
 
     pub fn tag_metric(&self, metric: &mut Metric) {
-        log::info!("tag_metric: {:?}", self);
         metric.family = Some(self.clone());
+
+        // Remove all unknown labels from the metric
+        metric
+            .labels
+            .retain(|label| self.label_set.contains(&label.key));
     }
 }
 

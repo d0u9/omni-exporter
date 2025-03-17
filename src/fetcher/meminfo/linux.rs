@@ -1,7 +1,16 @@
 use crate::error::Result;
 use crate::procfs::fs;
 
-use super::Metric;
+use super::super::FetcherMetric;
+use super::super::FetcherMetricName;
+
+pub type MeminfoMetric = FetcherMetric<MeminfoMetricNames>;
+
+impl MeminfoMetric {
+    pub fn new(name: MeminfoMetricNames, value: Option<u64>) -> Self {
+        Self { name, value: value.into(), labels: None }
+    }
+}
 
 pub struct MeminfoInner {
     procfs: fs::FS,
@@ -13,201 +22,63 @@ impl MeminfoInner {
         Self { procfs }
     }
 
-    pub async fn get_meminfo(&self) -> Result<Vec<Metric>> {
+    pub async fn get_meminfo(&self) -> Result<Vec<MeminfoMetric>> {
         let m = self.procfs.meminfo().await?;
         let metrics = vec![
-            Metric {
-                name: MetricNames::ActiveAnonBytes,
-                value: m.active_anon.into(),
-            },
-            Metric {
-                name: MetricNames::ActiveBytes,
-                value: m.active.into(),
-            },
-            Metric {
-                name: MetricNames::ActiveFileBytes,
-                value: m.active_file.into(),
-            },
-            Metric {
-                name: MetricNames::AnonHugePagesBytes,
-                value: m.anon_huge_pages.into(),
-            },
-            Metric {
-                name: MetricNames::AnonPagesBytes,
-                value: m.anon_pages.into(),
-            },
-            Metric {
-                name: MetricNames::BounceBytes,
-                value: m.bounce.into(),
-            },
-            Metric {
-                name: MetricNames::BuffersBytes,
-                value: m.buffers.into(),
-            },
-            Metric {
-                name: MetricNames::CachedBytes,
-                value: m.cached.into(),
-            },
-            Metric {
-                name: MetricNames::CmaFreeBytes,
-                value: m.cma_free.into(),
-            },
-            Metric {
-                name: MetricNames::CmaTotalBytes,
-                value: m.cma_total.into(),
-            },
-            Metric {
-                name: MetricNames::CommitLimitBytes,
-                value: m.commit_limit.into(),
-            },
-            Metric {
-                name: MetricNames::CommittedASBytes,
-                value: m.committed_as.into(),
-            },
-            Metric {
-                name: MetricNames::DirectMap1GBytes,
-                value: m.direct_map_1g.into(),
-            },
-            Metric {
-                name: MetricNames::DirectMap2MBytes,
-                value: m.direct_map_2m.into(),
-            },
-            Metric {
-                name: MetricNames::DirectMap4kBytes,
-                value: m.direct_map_4k.into(),
-            },
-            Metric {
-                name: MetricNames::DirtyBytes,
-                value: m.dirty.into(),
-            },
-            Metric {
-                name: MetricNames::HardwareCorruptedBytes,
-                value: m.hardware_corrupted.into(),
-            },
-            Metric {
-                name: MetricNames::HugePagesFree,
-                value: m.huge_pages_free.into(),
-            },
-            Metric {
-                name: MetricNames::HugePagesRsvd,
-                value: m.huge_pages_rsvd.into(),
-            },
-            Metric {
-                name: MetricNames::HugepagesizeBytes,
-                value: m.hugepagesize.into(),
-            },
-            Metric {
-                name: MetricNames::InactiveAnonBytes,
-                value: m.inactive_anon.into(),
-            },
-            Metric {
-                name: MetricNames::InactiveBytes,
-                value: m.inactive.into(),
-            },
-            Metric {
-                name: MetricNames::InactiveFileBytes,
-                value: m.inactive_file.into(),
-            },
-            Metric {
-                name: MetricNames::KernelStackBytes,
-                value: m.kernel_stack.into(),
-            },
-            Metric {
-                name: MetricNames::MappedBytes,
-                value: m.mapped.into(),
-            },
-            Metric {
-                name: MetricNames::MemAvailableBytes,
-                value: m.mem_available.into(),
-            },
-            Metric {
-                name: MetricNames::MemFreeBytes,
-                value: m.mem_free.into(),
-            },
-            Metric {
-                name: MetricNames::MlockedBytes,
-                value: m.mlocked.into(),
-            },
-            Metric {
-                name: MetricNames::NFSUnstableBytes,
-                value: m.nfs_unstable.into(),
-            },
-            Metric {
-                name: MetricNames::PageTablesBytes,
-                value: m.page_tables.into(),
-            },
-            Metric {
-                name: MetricNames::PercpuBytes,
-                value: m.percpu.into(),
-            },
-            Metric {
-                name: MetricNames::SReclaimableBytes,
-                value: m.sreclaimable.into(),
-            },
-            Metric {
-                name: MetricNames::SUnreclaimBytes,
-                value: m.sunreclaim.into(),
-            },
-            Metric {
-                name: MetricNames::ShmemBytes,
-                value: m.shmem.into(),
-            },
-            Metric {
-                name: MetricNames::ShmemHugePagesBytes,
-                value: m.shmem_huge_pages.into(),
-            },
-            Metric {
-                name: MetricNames::ShmemPmdMappedBytes,
-                value: m.shmem_pmd_mapped.into(),
-            },
-            Metric {
-                name: MetricNames::SlabBytes,
-                value: m.slab.into(),
-            },
-            Metric {
-                name: MetricNames::SwapCachedBytes,
-                value: m.swap_cached.into(),
-            },
-            Metric {
-                name: MetricNames::SwapFreeBytes,
-                value: m.swap_free.into(),
-            },
-            Metric {
-                name: MetricNames::SwapTotalBytes,
-                value: m.swap_total.into(),
-            },
-            Metric {
-                name: MetricNames::UnevictableBytes,
-                value: m.unevictable.into(),
-            },
-            Metric {
-                name: MetricNames::VmallocChunkBytes,
-                value: m.vmalloc_chunk.into(),
-            },
-            Metric {
-                name: MetricNames::VmallocTotalBytes,
-                value: m.vmalloc_total.into(),
-            },
-            Metric {
-                name: MetricNames::VmallocUsedBytes,
-                value: m.vmalloc_used.into(),
-            },
-            Metric {
-                name: MetricNames::WritebackBytes,
-                value: m.writeback.into(),
-            },
-            Metric {
-                name: MetricNames::WritebackTmpBytes,
-                value: m.writeback_tmp.into(),
-            },
+            MeminfoMetric::new(MeminfoMetricNames::ActiveAnonBytes, m.active_anon),
+            MeminfoMetric::new(MeminfoMetricNames::ActiveBytes, m.active),
+            MeminfoMetric::new(MeminfoMetricNames::ActiveFileBytes, m.active_file),
+            MeminfoMetric::new(MeminfoMetricNames::AnonHugePagesBytes, m.anon_huge_pages),
+            MeminfoMetric::new(MeminfoMetricNames::AnonPagesBytes, m.anon_pages),
+            MeminfoMetric::new(MeminfoMetricNames::BounceBytes, m.bounce),
+            MeminfoMetric::new(MeminfoMetricNames::BuffersBytes, m.buffers),
+            MeminfoMetric::new(MeminfoMetricNames::CachedBytes, m.cached),
+            MeminfoMetric::new(MeminfoMetricNames::CmaFreeBytes, m.cma_free),
+            MeminfoMetric::new(MeminfoMetricNames::CmaTotalBytes, m.cma_total),
+            MeminfoMetric::new(MeminfoMetricNames::CommitLimitBytes, m.commit_limit),
+            MeminfoMetric::new(MeminfoMetricNames::CommittedASBytes, m.committed_as),
+            MeminfoMetric::new(MeminfoMetricNames::DirectMap1GBytes, m.direct_map_1g),
+            MeminfoMetric::new(MeminfoMetricNames::DirectMap2MBytes, m.direct_map_2m),
+            MeminfoMetric::new(MeminfoMetricNames::DirectMap4kBytes, m.direct_map_4k),
+            MeminfoMetric::new(MeminfoMetricNames::DirtyBytes, m.dirty),
+            MeminfoMetric::new(MeminfoMetricNames::HardwareCorruptedBytes, m.hardware_corrupted),
+            MeminfoMetric::new(MeminfoMetricNames::HugePagesFree, m.huge_pages_free),
+            MeminfoMetric::new(MeminfoMetricNames::HugePagesRsvd, m.huge_pages_rsvd),
+            MeminfoMetric::new(MeminfoMetricNames::HugepagesizeBytes, m.hugepagesize),
+            MeminfoMetric::new(MeminfoMetricNames::InactiveAnonBytes, m.inactive_anon),
+            MeminfoMetric::new(MeminfoMetricNames::InactiveBytes, m.inactive),
+            MeminfoMetric::new(MeminfoMetricNames::InactiveFileBytes, m.inactive_file),
+            MeminfoMetric::new(MeminfoMetricNames::KernelStackBytes, m.kernel_stack),
+            MeminfoMetric::new(MeminfoMetricNames::MappedBytes, m.mapped),
+            MeminfoMetric::new(MeminfoMetricNames::MemAvailableBytes, m.mem_available),
+            MeminfoMetric::new(MeminfoMetricNames::MemFreeBytes, m.mem_free),
+            MeminfoMetric::new(MeminfoMetricNames::MlockedBytes, m.mlocked),
+            MeminfoMetric::new(MeminfoMetricNames::NFSUnstableBytes, m.nfs_unstable),
+            MeminfoMetric::new(MeminfoMetricNames::PageTablesBytes, m.page_tables),
+            MeminfoMetric::new(MeminfoMetricNames::PercpuBytes, m.percpu),
+            MeminfoMetric::new(MeminfoMetricNames::SReclaimableBytes, m.sreclaimable),
+            MeminfoMetric::new(MeminfoMetricNames::SUnreclaimBytes, m.sunreclaim),
+            MeminfoMetric::new(MeminfoMetricNames::ShmemBytes, m.shmem),
+            MeminfoMetric::new(MeminfoMetricNames::ShmemHugePagesBytes, m.shmem_huge_pages),
+            MeminfoMetric::new(MeminfoMetricNames::ShmemPmdMappedBytes, m.shmem_pmd_mapped),
+            MeminfoMetric::new(MeminfoMetricNames::SlabBytes, m.slab),
+            MeminfoMetric::new(MeminfoMetricNames::SwapCachedBytes, m.swap_cached),
+            MeminfoMetric::new(MeminfoMetricNames::SwapFreeBytes, m.swap_free),
+            MeminfoMetric::new(MeminfoMetricNames::SwapTotalBytes, m.swap_total),
+            MeminfoMetric::new(MeminfoMetricNames::UnevictableBytes, m.unevictable),
+            MeminfoMetric::new(MeminfoMetricNames::VmallocChunkBytes, m.vmalloc_chunk),
+            MeminfoMetric::new(MeminfoMetricNames::VmallocTotalBytes, m.vmalloc_total),
+            MeminfoMetric::new(MeminfoMetricNames::VmallocUsedBytes, m.vmalloc_used),
+            MeminfoMetric::new(MeminfoMetricNames::WritebackBytes, m.writeback),
+            MeminfoMetric::new(MeminfoMetricNames::WritebackTmpBytes, m.writeback_tmp),
         ];
 
         Ok(metrics)
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum MetricNames {
+#[derive(Debug, PartialEq, Clone)]
+pub enum MeminfoMetricNames {
     ActiveAnonBytes,
     ActiveBytes,
     ActiveFileBytes,
@@ -257,56 +128,75 @@ pub enum MetricNames {
     WritebackTmpBytes,
 }
 
-impl MetricNames {
+impl MeminfoMetricNames {
     pub fn to_str(&self) -> &'static str {
         match self {
-            MetricNames::ActiveAnonBytes => "active_anon_bytes",
-            MetricNames::ActiveBytes => "active_bytes",
-            MetricNames::ActiveFileBytes => "active_file_bytes",
-            MetricNames::AnonHugePagesBytes => "anon_hugepages_bytes",
-            MetricNames::AnonPagesBytes => "anon_pages_bytes",
-            MetricNames::BounceBytes => "bounce_bytes",
-            MetricNames::BuffersBytes => "buffers_bytes",
-            MetricNames::CachedBytes => "cached_bytes",
-            MetricNames::CmaFreeBytes => "cma_free_bytes",
-            MetricNames::CmaTotalBytes => "cma_total_bytes",
-            MetricNames::CommitLimitBytes => "commit_limit_bytes",
-            MetricNames::CommittedASBytes => "committed_as_bytes",
-            MetricNames::DirectMap1GBytes => "direct_map_1g_bytes",
-            MetricNames::DirectMap2MBytes => "direct_map_2m_bytes",
-            MetricNames::DirectMap4kBytes => "direct_map_4k_bytes",
-            MetricNames::DirtyBytes => "dirty_bytes",
-            MetricNames::HardwareCorruptedBytes => "hardware_corrupted_bytes",
-            MetricNames::HugePagesFree => "hugepages_free",
-            MetricNames::HugePagesRsvd => "hugepages_rsvd",
-            MetricNames::HugepagesizeBytes => "hugepagesize_bytes",
-            MetricNames::InactiveAnonBytes => "inactive_anon_bytes",
-            MetricNames::InactiveBytes => "inactive_bytes",
-            MetricNames::InactiveFileBytes => "inactive_file_bytes",
-            MetricNames::KernelStackBytes => "kernel_stack_bytes",
-            MetricNames::MappedBytes => "mapped_bytes",
-            MetricNames::MemAvailableBytes => "mem_available_bytes",
-            MetricNames::MemFreeBytes => "mem_free_bytes",
-            MetricNames::MemTotalBytes => "mem_total_bytes",
-            MetricNames::MlockedBytes => "mlocked_bytes",
-            MetricNames::NFSUnstableBytes => "nfs_unstable_bytes",
-            MetricNames::PageTablesBytes => "page_tables_bytes",
-            MetricNames::PercpuBytes => "percpu_bytes",
-            MetricNames::SReclaimableBytes => "s_reclaimable_bytes",
-            MetricNames::ShmemBytes => "shmem_bytes",
-            MetricNames::ShmemHugePagesBytes => "shmem_hugepages_bytes",
-            MetricNames::ShmemPmdMappedBytes => "shmem_pmd_mapped_bytes",
-            MetricNames::SlabBytes => "slab_bytes",
-            MetricNames::SUnreclaimBytes => "s_unreclaim_bytes",
-            MetricNames::SwapCachedBytes => "swap_cached_bytes",
-            MetricNames::SwapFreeBytes => "swap_free_bytes",
-            MetricNames::SwapTotalBytes => "swap_total_bytes",
-            MetricNames::UnevictableBytes => "unevictable_bytes",
-            MetricNames::VmallocChunkBytes => "vmalloc_chunk_bytes",
-            MetricNames::VmallocTotalBytes => "vmalloc_total_bytes",
-            MetricNames::VmallocUsedBytes => "vmalloc_used_bytes",
-            MetricNames::WritebackBytes => "writeback_bytes",
-            MetricNames::WritebackTmpBytes => "writeback_tmp_bytes",
+            MeminfoMetricNames::ActiveAnonBytes => "active_anon_bytes",
+            MeminfoMetricNames::ActiveBytes => "active_bytes",
+            MeminfoMetricNames::ActiveFileBytes => "active_file_bytes",
+            MeminfoMetricNames::AnonHugePagesBytes => "anon_hugepages_bytes",
+            MeminfoMetricNames::AnonPagesBytes => "anon_pages_bytes",
+            MeminfoMetricNames::BounceBytes => "bounce_bytes",
+            MeminfoMetricNames::BuffersBytes => "buffers_bytes",
+            MeminfoMetricNames::CachedBytes => "cached_bytes",
+            MeminfoMetricNames::CmaFreeBytes => "cma_free_bytes",
+            MeminfoMetricNames::CmaTotalBytes => "cma_total_bytes",
+            MeminfoMetricNames::CommitLimitBytes => "commit_limit_bytes",
+            MeminfoMetricNames::CommittedASBytes => "committed_as_bytes",
+            MeminfoMetricNames::DirectMap1GBytes => "direct_map_1g_bytes",
+            MeminfoMetricNames::DirectMap2MBytes => "direct_map_2m_bytes",
+            MeminfoMetricNames::DirectMap4kBytes => "direct_map_4k_bytes",
+            MeminfoMetricNames::DirtyBytes => "dirty_bytes",
+            MeminfoMetricNames::HardwareCorruptedBytes => "hardware_corrupted_bytes",
+            MeminfoMetricNames::HugePagesFree => "hugepages_free",
+            MeminfoMetricNames::HugePagesRsvd => "hugepages_rsvd",
+            MeminfoMetricNames::HugepagesizeBytes => "hugepagesize_bytes",
+            MeminfoMetricNames::InactiveAnonBytes => "inactive_anon_bytes",
+            MeminfoMetricNames::InactiveBytes => "inactive_bytes",
+            MeminfoMetricNames::InactiveFileBytes => "inactive_file_bytes",
+            MeminfoMetricNames::KernelStackBytes => "kernel_stack_bytes",
+            MeminfoMetricNames::MappedBytes => "mapped_bytes",
+            MeminfoMetricNames::MemAvailableBytes => "mem_available_bytes",
+            MeminfoMetricNames::MemFreeBytes => "mem_free_bytes",
+            MeminfoMetricNames::MemTotalBytes => "mem_total_bytes",
+            MeminfoMetricNames::MlockedBytes => "mlocked_bytes",
+            MeminfoMetricNames::NFSUnstableBytes => "nfs_unstable_bytes",
+            MeminfoMetricNames::PageTablesBytes => "page_tables_bytes",
+            MeminfoMetricNames::PercpuBytes => "percpu_bytes",
+            MeminfoMetricNames::SReclaimableBytes => "s_reclaimable_bytes",
+            MeminfoMetricNames::ShmemBytes => "shmem_bytes",
+            MeminfoMetricNames::ShmemHugePagesBytes => "shmem_hugepages_bytes",
+            MeminfoMetricNames::ShmemPmdMappedBytes => "shmem_pmd_mapped_bytes",
+            MeminfoMetricNames::SlabBytes => "slab_bytes",
+            MeminfoMetricNames::SUnreclaimBytes => "s_unreclaim_bytes",
+            MeminfoMetricNames::SwapCachedBytes => "swap_cached_bytes",
+            MeminfoMetricNames::SwapFreeBytes => "swap_free_bytes",
+            MeminfoMetricNames::SwapTotalBytes => "swap_total_bytes",
+            MeminfoMetricNames::UnevictableBytes => "unevictable_bytes",
+            MeminfoMetricNames::VmallocChunkBytes => "vmalloc_chunk_bytes",
+            MeminfoMetricNames::VmallocTotalBytes => "vmalloc_total_bytes",
+            MeminfoMetricNames::VmallocUsedBytes => "vmalloc_used_bytes",
+            MeminfoMetricNames::WritebackBytes => "writeback_bytes",
+            MeminfoMetricNames::WritebackTmpBytes => "writeback_tmp_bytes",
         }
     }
 }
+
+impl FetcherMetricName for MeminfoMetricNames {
+    fn to_str(&self) -> &'static str {
+        self.to_str()
+    }
+}
+
+impl AsRef<str> for MeminfoMetricNames {
+    fn as_ref(&self) -> &str {
+        self.to_str()
+    }
+}
+
+impl From<MeminfoMetricNames> for &'static str {
+    fn from(name: MeminfoMetricNames) -> Self {
+        name.to_str()
+    }
+}
+

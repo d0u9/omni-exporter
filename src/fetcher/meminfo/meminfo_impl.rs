@@ -1,8 +1,7 @@
 use crate::error::Result;
-use crate::metric::MetricValue;
 
+use super::MeminfoMetric;
 use super::MeminfoInner;
-use super::MetricNames;
 
 pub struct Meminfo {
     inner: MeminfoInner,
@@ -15,26 +14,8 @@ impl Meminfo {
         }
     }
 
-    pub async fn get_meminfo(&self) -> Result<Vec<Metric>> {
+    pub async fn get_meminfo(&self) -> Result<Vec<MeminfoMetric>> {
         self.inner.get_meminfo().await
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Metric {
-    pub name: MetricNames,
-    pub value: MetricValue,
-}
-
-impl AsRef<str> for MetricNames {
-    fn as_ref(&self) -> &'static str {
-        self.to_str()
-    }
-}
-
-impl From<MetricNames> for &'static str {
-    fn from(name: MetricNames) -> Self {
-        name.to_str()
     }
 }
 

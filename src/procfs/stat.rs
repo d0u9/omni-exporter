@@ -53,7 +53,7 @@ pub struct Stat {
     // Summed up cpu statistics.
     pub cpu_total: CPUStat,
     // Per-CPU statistics.
-    pub cpu: Vec<CPUStat>,
+    pub cpu: HashMap<usize, CPUStat>,
     // Number of times interrupts were handled, which contains numbered and unnumbered IRQs.
     pub irq_total: u64,
     // Number of times a numbered IRQ was triggered.
@@ -87,8 +87,6 @@ impl FS {
         let reader = BufReader::new(r);
         let mut lines = reader.lines();
 
-        let mut cpu_stats = HashMap::new();
-
         while let Some(line) = lines.next_line().await? {
             let parts: Vec<&str> = line.split_whitespace().collect();
 
@@ -117,21 +115,12 @@ impl FS {
                 s if s.starts_with("cpu") => {
                     let (cpu_stat, cpu) = Self::parse_cpu_stat(&line).await?;
                     match cpu {
-                        Some(cpu) => _ = cpu_stats.insert(cpu, cpu_stat),
+                        Some(cpu) => _ = stat.cpu.insert(cpu, cpu_stat),
                         None => stat.cpu_total = cpu_stat,
                     }
                 }
                 _ => {}
             }
-        }
-
-        let l = cpu_stats
-            .keys()
-            .max()
-            .ok_or(Error::InvalidIndex("No cpu stats".to_string()))?;
-        stat.cpu = vec![CPUStat::default(); *l + 1];
-        for (k, v) in cpu_stats {
-            stat.cpu[k] = v;
         }
 
         Ok(stat)

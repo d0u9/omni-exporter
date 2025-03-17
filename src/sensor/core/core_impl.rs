@@ -4,22 +4,26 @@ use crate::error::Result;
 use crate::metric::Metrics;
 use crate::sensor::SensorReader;
 
+use super::cpu;
 use super::meminfo;
 
 pub struct CoreReader {
     meminfo: meminfo::Meminfo,
+    cpu: cpu::CPU,
 }
 
 impl CoreReader {
     pub fn new() -> Self {
         CoreReader {
             meminfo: meminfo::Meminfo::new(),
+            cpu: cpu::CPU::new(),
         }
     }
 
     async fn read_all(&self) -> Result<Metrics> {
         let mut metrics = Vec::new();
         metrics.extend(self.meminfo.get_meminfo().await?);
+        metrics.extend(self.cpu.update().await?);
         Ok(Metrics::from_vec(metrics))
     }
 }
