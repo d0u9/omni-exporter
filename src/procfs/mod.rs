@@ -1,4 +1,4 @@
-pub(self) mod internal;
+mod internal;
 
 pub mod fs;
 pub mod meminfo;

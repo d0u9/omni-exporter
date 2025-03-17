@@ -95,18 +95,18 @@ impl FS {
             }
 
             match parts[0] {
-                "btime" => stat.boot_time = u64::from_str_radix(parts[1], 10)?,
+                "btime" => stat.boot_time = parts[1].parse::<u64>()?,
                 "intr" => {
-                    stat.irq_total = u64::from_str_radix(parts[1], 10)?;
+                    stat.irq_total = parts[1].parse::<u64>()?;
                     stat.irq = parts[2..]
                         .iter()
-                        .map(|s| u64::from_str_radix(s, 10).map_err(Into::into))
-                        .collect::<Result<Vec<u64>>>()?;
+                        .map(|s| s.parse::<u64>())
+                        .collect::<std::result::Result<Vec<u64>, _>>()?;
                 }
-                "ctxt" => stat.context_switches = u64::from_str_radix(parts[1], 10)?,
-                "processes" => stat.process_created = u64::from_str_radix(parts[1], 10)?,
-                "procs_running" => stat.processes_running = u64::from_str_radix(parts[1], 10)?,
-                "procs_blocked" => stat.processes_blocked = u64::from_str_radix(parts[1], 10)?,
+                "ctxt" => stat.context_switches = parts[1].parse::<u64>()?,
+                "processes" => stat.process_created = parts[1].parse::<u64>()?,
+                "procs_running" => stat.processes_running = parts[1].parse::<u64>()?,
+                "procs_blocked" => stat.processes_blocked = parts[1].parse::<u64>()?,
                 "softirq" => {
                     let (softirq, total) = Self::parse_softirq(&line).await?;
                     stat.softirq_total = total;

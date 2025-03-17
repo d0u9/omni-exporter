@@ -88,7 +88,7 @@ impl FS {
             let parts: Vec<&str> = line.split_whitespace().collect();
 
             let val = parts[1].parse::<u64>()?;
-            let val = match parts.get(2).map(|s| *s) {
+            let val = match parts.get(2).copied() {
                 Some("kB") => val * 1024,
                 Some("MB") => val * 1024 * 1024,
                 Some("GB") => val * 1024 * 1024 * 1024,

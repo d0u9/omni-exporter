@@ -3,7 +3,7 @@ use std::fmt;
 #[derive(Debug)]
 pub enum Error {
     ParseStringErr(String),
-    IOError(String),
+    IOErr(String),
     InvalidIndex(String),
 }
 
@@ -11,7 +11,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::ParseStringErr(ref err) => write!(f, "Parsing String Error: {}", err),
-            Error::IOError(ref err) => write!(f, "IO Error: {}", err),
+            Error::IOErr(ref err) => write!(f, "IO Error: {}", err),
             Error::InvalidIndex(ref err) => write!(f, "Invalid Index: {}", err),
         }
     }
@@ -29,7 +29,7 @@ impl From<std::num::ParseIntError> for Error {
 
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
-        Error::IOError(err.to_string())
+        Error::IOErr(err.to_string())
     }
 }
 

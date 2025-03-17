@@ -48,7 +48,7 @@ impl CPUInner {
             }]
         }
 
-        let metrics = stats.iter().map(|(i, n)| metric(i, n)).flatten().collect();
+        let metrics = stats.iter().flat_map(|(i, n)| metric(i, n)).collect();
 
         Ok(metrics)
     }
