@@ -9,6 +9,6 @@ pub mod stat;
 
 mod error;
 #[allow(unused_imports)]
-pub use error::Error;
+pub use error::Err;
 #[allow(unused_imports)]
 pub use error::Result;

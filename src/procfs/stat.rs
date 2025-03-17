@@ -10,7 +10,7 @@ use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 use crate::procfs::internal::utils;
 use crate::procfs::proc_stat::USER_HZ;
 
-use super::error::{Error, Result};
+use super::error::{Err, Result};
 use super::fs::FS;
 
 // CPUStat shows how much time the cpu spend in various stages.
@@ -136,7 +136,7 @@ impl FS {
             .collect::<std::result::Result<Vec<f64>, _>>()?;
 
         if values.len() < 10 {
-            return Err(Error::InvalidIndex(format!(
+            return Err(Err::InvalidIndex(format!(
                 "Not enough cpu values: {}",
                 values.len()
             )));
@@ -170,7 +170,7 @@ impl FS {
             .collect::<std::result::Result<Vec<u64>, _>>()?;
 
         if values.len() < 11 {
-            return Err(Error::InvalidIndex(format!(
+            return Err(Err::InvalidIndex(format!(
                 "Not enough softirq values: {}",
                 values.len()
             )));

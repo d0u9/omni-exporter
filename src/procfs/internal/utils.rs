@@ -10,9 +10,9 @@ use super::super::error::Result;
 // Reads a max file size of 1024kB.  For files larger than this, a scanner
 // should be used.
 pub async fn read_file_no_stat<P: AsRef<Path>>(filename: P) -> Result<Vec<u8>> {
-    let mut file = File::open(filename).await.unwrap();
+    let mut file = File::open(filename).await?;
     let mut buffer = vec![0; 1024 * 1024];
-    let bytes_read = file.read(&mut buffer).await.unwrap();
+    let bytes_read = file.read(&mut buffer).await?;
     buffer.truncate(bytes_read);
 
     Ok(buffer)
