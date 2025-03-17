@@ -4,7 +4,7 @@ pub use cpu_impl::CPU;
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "macos")]
-pub use macos::{CPUInner, MetricNames};
+pub use macos::{CPUInner, CpuMetric, CpuMetricNames};
 
 #[cfg(target_os = "linux")]
 mod linux;

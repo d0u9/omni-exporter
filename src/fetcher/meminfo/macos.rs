@@ -1,9 +1,21 @@
 use crate::error::Result;
-use crate::metric::MetricValue;
 
 use crate::ffi;
 
-use super::Metric;
+use super::super::FetcherMetric;
+use super::super::FetcherMetricName;
+
+pub type MeminfoMetric = FetcherMetric<MeminfoMetricNames>;
+
+impl MeminfoMetric {
+    pub fn new(name: MeminfoMetricNames, value: u64) -> Self {
+        Self {
+            name,
+            value: value.into(),
+            labels: None,
+        }
+    }
+}
 
 pub struct MeminfoInner;
 
@@ -12,66 +24,39 @@ impl MeminfoInner {
         Self {}
     }
 
-    pub async fn get_meminfo(&self) -> Result<Vec<Metric>> {
+    pub async fn get_meminfo(&self) -> Result<Vec<MeminfoMetric>> {
         let meminfo = ffi::macos::meminfo::get_meminfo()?;
 
         let metrics = vec![
-            Metric {
-                name: MetricNames::FreeBytes,
-                value: MetricValue::U64(meminfo.free_bytes),
-            },
-            Metric {
-                name: MetricNames::ActiveBytes,
-                value: MetricValue::U64(meminfo.active_bytes),
-            },
-            Metric {
-                name: MetricNames::CompressedBytes,
-                value: MetricValue::U64(meminfo.compressed_bytes),
-            },
-            Metric {
-                name: MetricNames::InactiveBytes,
-                value: MetricValue::U64(meminfo.inactive_bytes),
-            },
-            Metric {
-                name: MetricNames::WiredBytes,
-                value: MetricValue::U64(meminfo.wired_bytes),
-            },
-            Metric {
-                name: MetricNames::SwappedInBytesTotal,
-                value: MetricValue::U64(meminfo.swapped_in_bytes_total),
-            },
-            Metric {
-                name: MetricNames::SwappedOutBytesTotal,
-                value: MetricValue::U64(meminfo.swapped_out_bytes_total),
-            },
-            Metric {
-                name: MetricNames::InternalBytes,
-                value: MetricValue::U64(meminfo.internal_bytes),
-            },
-            Metric {
-                name: MetricNames::PurgeableBytes,
-                value: MetricValue::U64(meminfo.purgeable_bytes),
-            },
-            Metric {
-                name: MetricNames::TotalBytes,
-                value: MetricValue::U64(meminfo.total_bytes),
-            },
-            Metric {
-                name: MetricNames::SwapUsedBytes,
-                value: MetricValue::U64(meminfo.swap_used_bytes),
-            },
-            Metric {
-                name: MetricNames::SwapTotalBytes,
-                value: MetricValue::U64(meminfo.swap_total_bytes),
-            },
+            MeminfoMetric::new(MeminfoMetricNames::FreeBytes, meminfo.free_bytes),
+            MeminfoMetric::new(MeminfoMetricNames::ActiveBytes, meminfo.active_bytes),
+            MeminfoMetric::new(
+                MeminfoMetricNames::CompressedBytes,
+                meminfo.compressed_bytes,
+            ),
+            MeminfoMetric::new(MeminfoMetricNames::InactiveBytes, meminfo.inactive_bytes),
+            MeminfoMetric::new(MeminfoMetricNames::WiredBytes, meminfo.wired_bytes),
+            MeminfoMetric::new(
+                MeminfoMetricNames::SwappedInBytesTotal,
+                meminfo.swapped_in_bytes_total,
+            ),
+            MeminfoMetric::new(
+                MeminfoMetricNames::SwappedOutBytesTotal,
+                meminfo.swapped_out_bytes_total,
+            ),
+            MeminfoMetric::new(MeminfoMetricNames::InternalBytes, meminfo.internal_bytes),
+            MeminfoMetric::new(MeminfoMetricNames::PurgeableBytes, meminfo.purgeable_bytes),
+            MeminfoMetric::new(MeminfoMetricNames::TotalBytes, meminfo.total_bytes),
+            MeminfoMetric::new(MeminfoMetricNames::SwapUsedBytes, meminfo.swap_used_bytes),
+            MeminfoMetric::new(MeminfoMetricNames::SwapTotalBytes, meminfo.swap_total_bytes),
         ];
 
         Ok(metrics)
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum MetricNames {
+#[derive(Debug, PartialEq, Clone)]
+pub enum MeminfoMetricNames {
     ActiveBytes,
     CompressedBytes,
     InactiveBytes,
@@ -86,21 +71,39 @@ pub enum MetricNames {
     SwapTotalBytes,
 }
 
-impl MetricNames {
+impl MeminfoMetricNames {
     pub fn to_str(&self) -> &'static str {
         match self {
-            MetricNames::FreeBytes => "free_bytes",
-            MetricNames::ActiveBytes => "active_bytes",
-            MetricNames::CompressedBytes => "compressed_bytes",
-            MetricNames::InactiveBytes => "inactive_bytes",
-            MetricNames::WiredBytes => "wired_bytes",
-            MetricNames::SwappedInBytesTotal => "swapped_in_bytes_total",
-            MetricNames::SwappedOutBytesTotal => "swapped_out_bytes_total",
-            MetricNames::InternalBytes => "internal_bytes",
-            MetricNames::PurgeableBytes => "purgeable_bytes",
-            MetricNames::TotalBytes => "total_bytes",
-            MetricNames::SwapUsedBytes => "swap_used_bytes",
-            MetricNames::SwapTotalBytes => "swap_total_bytes",
+            MeminfoMetricNames::FreeBytes => "free_bytes",
+            MeminfoMetricNames::ActiveBytes => "active_bytes",
+            MeminfoMetricNames::CompressedBytes => "compressed_bytes",
+            MeminfoMetricNames::InactiveBytes => "inactive_bytes",
+            MeminfoMetricNames::WiredBytes => "wired_bytes",
+            MeminfoMetricNames::SwappedInBytesTotal => "swapped_in_bytes_total",
+            MeminfoMetricNames::SwappedOutBytesTotal => "swapped_out_bytes_total",
+            MeminfoMetricNames::InternalBytes => "internal_bytes",
+            MeminfoMetricNames::PurgeableBytes => "purgeable_bytes",
+            MeminfoMetricNames::TotalBytes => "total_bytes",
+            MeminfoMetricNames::SwapUsedBytes => "swap_used_bytes",
+            MeminfoMetricNames::SwapTotalBytes => "swap_total_bytes",
         }
+    }
+}
+
+impl FetcherMetricName for MeminfoMetricNames {
+    fn to_str(&self) -> &'static str {
+        self.to_str()
+    }
+}
+
+impl AsRef<str> for MeminfoMetricNames {
+    fn as_ref(&self) -> &str {
+        self.to_str()
+    }
+}
+
+impl From<MeminfoMetricNames> for &'static str {
+    fn from(name: MeminfoMetricNames) -> Self {
+        name.to_str()
     }
 }

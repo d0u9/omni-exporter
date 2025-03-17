@@ -1,7 +1,7 @@
 use crate::error::Result;
 
-use super::MeminfoMetric;
 use super::MeminfoInner;
+use super::MeminfoMetric;
 
 pub struct Meminfo {
     inner: MeminfoInner,
@@ -21,6 +21,7 @@ impl Meminfo {
 
 #[cfg(test)]
 mod tests {
+    use super::super::MeminfoMetricNames;
     use super::*;
 
     #[tokio::test]
@@ -31,7 +32,11 @@ mod tests {
         assert!(metrics.len() > 0);
 
         #[cfg(target_os = "macos")]
-        assert!(metrics.iter().any(|m| m.name == MetricNames::FreeBytes));
+        assert!(
+            metrics
+                .iter()
+                .any(|m| m.name == MeminfoMetricNames::FreeBytes)
+        );
 
         println!("{:?}", metrics);
     }

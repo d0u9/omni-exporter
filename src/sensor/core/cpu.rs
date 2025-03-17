@@ -67,9 +67,9 @@ impl From<Vec<CpuMetric>> for Metrics {
     }
 }
 
-pub struct CPU;
+pub struct Cpu;
 
-impl CPU {
+impl Cpu {
     pub fn new() -> Self {
         Self {}
     }
@@ -99,7 +99,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_meminfo() {
-        let cpu = CPU::new();
+        let cpu = Cpu::new();
         let metrics = cpu.update().await.unwrap();
         println!("{:?}", metrics);
     }

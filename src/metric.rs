@@ -64,6 +64,12 @@ impl From<Option<u64>> for MetricValue {
     }
 }
 
+impl From<u64> for MetricValue {
+    fn from(value: u64) -> Self {
+        MetricValue::U64(value)
+    }
+}
+
 impl From<Option<f64>> for MetricValue {
     fn from(value: Option<f64>) -> Self {
         match value {
@@ -100,7 +106,11 @@ impl Metric {
         }
     }
 
-    pub fn new_with_labels(name: &'static str, value: MetricValue, labels: Option<Vec<Label>>) -> Self {
+    pub fn new_with_labels(
+        name: &'static str,
+        value: MetricValue,
+        labels: Option<Vec<Label>>,
+    ) -> Self {
         Self {
             name,
             value,

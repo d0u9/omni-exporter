@@ -8,7 +8,11 @@ pub type MeminfoMetric = FetcherMetric<MeminfoMetricNames>;
 
 impl MeminfoMetric {
     pub fn new(name: MeminfoMetricNames, value: Option<u64>) -> Self {
-        Self { name, value: value.into(), labels: None }
+        Self {
+            name,
+            value: value.into(),
+            labels: None,
+        }
     }
 }
 
@@ -41,7 +45,10 @@ impl MeminfoInner {
             MeminfoMetric::new(MeminfoMetricNames::DirectMap2MBytes, m.direct_map_2m),
             MeminfoMetric::new(MeminfoMetricNames::DirectMap4kBytes, m.direct_map_4k),
             MeminfoMetric::new(MeminfoMetricNames::DirtyBytes, m.dirty),
-            MeminfoMetric::new(MeminfoMetricNames::HardwareCorruptedBytes, m.hardware_corrupted),
+            MeminfoMetric::new(
+                MeminfoMetricNames::HardwareCorruptedBytes,
+                m.hardware_corrupted,
+            ),
             MeminfoMetric::new(MeminfoMetricNames::HugePagesFree, m.huge_pages_free),
             MeminfoMetric::new(MeminfoMetricNames::HugePagesRsvd, m.huge_pages_rsvd),
             MeminfoMetric::new(MeminfoMetricNames::HugepagesizeBytes, m.hugepagesize),
@@ -199,4 +206,3 @@ impl From<MeminfoMetricNames> for &'static str {
         name.to_str()
     }
 }
-

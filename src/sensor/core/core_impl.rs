@@ -9,14 +9,14 @@ use super::meminfo;
 
 pub struct CoreReader {
     meminfo: meminfo::Meminfo,
-    cpu: cpu::CPU,
+    cpu: cpu::Cpu,
 }
 
 impl CoreReader {
     pub fn new() -> Self {
         CoreReader {
             meminfo: meminfo::Meminfo::new(),
-            cpu: cpu::CPU::new(),
+            cpu: cpu::Cpu::new(),
         }
     }
 
