@@ -1,5 +1,7 @@
 mod internal;
 
+pub mod sys;
+
 pub mod fs;
 pub mod meminfo;
 pub mod proc_stat;
