@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use tokio::fs;
 
-use super::super::error::{Err, IOError, Result};
+use super::super::error::{Err, IOErr, Result};
 use super::super::internal::sysreadfile;
 use super::fs::FS;
 
@@ -33,16 +33,16 @@ impl Cpu {
         println!("{:?}", cpu_path);
         let online = sysreadfile::sys_read_file(cpu_path).await?;
         let online_str = String::from_utf8_lossy(&online);
-        Ok(online_str.chars().next() == Some('1'))
+        Ok(online_str.starts_with("1"))
     }
 }
 
 #[derive(Debug, Default)]
-struct CpuTopology {
-    core_id: usize,
-    core_siblings_list: String,
-    physical_package_id: usize,
-    thread_siblings_list: String,
+pub struct CpuTopology {
+    pub core_id: usize,
+    pub core_siblings_list: String,
+    pub physical_package_id: usize,
+    pub thread_siblings_list: String,
 }
 
 impl Cpu {
@@ -51,7 +51,7 @@ impl Cpu {
         // cpu_topology_path is a directory
         let cpu_topology_path = self.sys.join("topology");
         if !cpu_topology_path.is_dir() {
-            return Err(Err::IOErr(IOError::NotDir(
+            return Err(Err::IO(IOErr::NotDir(
                 cpu_topology_path.to_string_lossy().to_string(),
             )));
         };
@@ -78,9 +78,9 @@ impl Cpu {
 }
 
 #[derive(Debug, Default)]
-struct CpuThermalThrottle {
-    core_throttle_count: usize,
-    package_throttle_count: usize,
+pub struct CpuThermalThrottle {
+    pub core_throttle_count: usize,
+    pub package_throttle_count: usize,
 }
 
 impl Cpu {
@@ -89,7 +89,7 @@ impl Cpu {
         // themal_path is a directory
         let thermal_path = self.sys.join("thermal_throttle");
         if !thermal_path.is_dir() {
-            return Err(Err::IOErr(IOError::NotDir(
+            return Err(Err::IO(IOErr::NotDir(
                 thermal_path.to_string_lossy().to_string(),
             )));
         };
@@ -141,24 +141,24 @@ impl FS {
 }
 
 #[derive(Debug, Default)]
-struct SystemCpuFreqStats {
-    name: String,
-    cpuinfo_current_frequency: u64,
-    cpuinfo_minimum_frequency: u64,
-    cpuinfo_maximum_frequency: u64,
-    cpuinfo_transition_latency: u64,
-    scaling_current_frequency: u64,
-    scaling_minimum_frequency: u64,
-    scaling_maximum_frequency: u64,
-    available_governors: String,
-    driver: String,
-    governor: String,
-    related_cpus: String,
-    set_speed: String,
+pub struct SystemCpuFreqStats {
+    pub name: String,
+    pub cpuinfo_current_frequency: u64,
+    pub cpuinfo_minimum_frequency: u64,
+    pub cpuinfo_maximum_frequency: u64,
+    pub cpuinfo_transition_latency: u64,
+    pub scaling_current_frequency: u64,
+    pub scaling_minimum_frequency: u64,
+    pub scaling_maximum_frequency: u64,
+    pub available_governors: String,
+    pub driver: String,
+    pub governor: String,
+    pub related_cpus: String,
+    pub set_speed: String,
     // Refer `CONFIG_CPU_FREQ_STAT`: https://www.kernel.org/doc/html/latest/cpu-freq/cpufreq-stats.html#configuring-cpufreq-stats
-    cpuinfo_frequency_duration: HashMap<u64, u64>,
-    cpuinfo_frequency_transitions_total: u64,
-    cpuinfo_transition_table: Vec<Vec<u64>>,
+    pub cpuinfo_frequency_duration: HashMap<u64, u64>,
+    pub cpuinfo_frequency_transitions_total: u64,
+    pub cpuinfo_transition_table: Vec<Vec<u64>>,
 }
 
 impl FS {
@@ -170,7 +170,7 @@ impl FS {
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::error::{Err, IOError};
+    use super::super::super::error::{Err, IOErr};
     use super::*;
 
     #[tokio::test]
@@ -187,7 +187,7 @@ mod tests {
         let onlline = match cpus[0].online().await {
             Ok(online) => online,
             Err(e) => match e {
-                Err::IOErr(IOError::NotFound(path)) => {
+                Err::IO(IOErr::NotFound(path)) => {
                     println!("{}", path);
                     false
                 }

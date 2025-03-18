@@ -6,16 +6,6 @@ use super::super::FetcherMetricName;
 
 pub type MeminfoMetric = FetcherMetric<MeminfoMetricNames>;
 
-impl MeminfoMetric {
-    pub fn new(name: MeminfoMetricNames, value: Option<u64>) -> Self {
-        Self {
-            name,
-            value: value.into(),
-            labels: None,
-        }
-    }
-}
-
 pub struct MeminfoInner {
     procfs: fs::FS,
 }

@@ -19,6 +19,6 @@ pub async fn sys_read_file<P: AsRef<Path>>(path: P) -> Result<Vec<u8>> {
 pub async fn sys_read_file_string<P: AsRef<Path>>(path: P) -> Result<String> {
     let bytes = sys_read_file(path).await?;
     String::from_utf8(bytes)
-        .map_err(|e| Err::ParseStringErr(e.to_string()))
+        .map_err(|e| Err::ParseString(e.to_string()))
         .map(|s| s.trim().to_string())
 }
