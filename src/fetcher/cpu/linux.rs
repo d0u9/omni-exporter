@@ -38,14 +38,14 @@ impl CPUInner {
         let stats = self.cpu_status.read().await;
 
         fn metric(n: &usize, stat: &CPUStat) -> Vec<CpuMetric> {
-            vec![CpuMetric {
-                name: CpuMetricNames::CpuTotal,
-                value: stat.user.into(),
-                labels: Some(vec![
+            vec![CpuMetric::new_with_labels(
+                CpuMetricNames::CpuTotal,
+                stat.user,
+                vec![
                     Label::new("cpu", n.to_string()),
                     Label::new("mode", "user".to_string()),
-                ]),
-            }]
+                ],
+            )]
         }
 
         let metrics = stats.iter().flat_map(|(i, n)| metric(i, n)).collect();

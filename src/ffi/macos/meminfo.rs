@@ -13,32 +13,32 @@ use crate::error::{Error, Result};
 use std::mem;
 
 #[allow(clippy::all)]
-mod bindgen {
+mod C {
     include!(concat!(env!("OUT_DIR"), "/ffi/macos/meminfo.rs"));
 }
 
-unsafe fn get_vmstat() -> Result<(u64, bindgen::vm_statistics64_data_t)> {
-    let host = unsafe { bindgen::mach_host_self() };
-    let mut vmstat: bindgen::vm_statistics64_data_t = unsafe { mem::zeroed() };
+unsafe fn get_vmstat() -> Result<(u64, C::vm_statistics64_data_t)> {
+    let host = unsafe { C::mach_host_self() };
+    let mut vmstat: C::vm_statistics64_data_t = unsafe { mem::zeroed() };
     let mut info_count = libc::HOST_VM_INFO64_COUNT;
     let ret = unsafe {
-        bindgen::host_statistics64(
+        C::host_statistics64(
             host,
-            bindgen::HOST_VM_INFO64 as i32,
+            C::HOST_VM_INFO64 as i32,
             &mut vmstat as *mut _ as *mut _,
             &mut info_count as *mut _,
         )
     };
-    if ret != bindgen::KERN_SUCCESS as i32 {
+    if ret != C::KERN_SUCCESS as i32 {
         return Err(Error::FFIError(format!(
             "host_statistics64 failed: {}",
             ret
         )));
     }
 
-    let mut page_size: bindgen::vm_size_t = 0;
-    let ret = unsafe { bindgen::host_page_size(host, &mut page_size) };
-    if ret != bindgen::KERN_SUCCESS as i32 {
+    let mut page_size: C::vm_size_t = 0;
+    let ret = unsafe { C::host_page_size(host, &mut page_size) };
+    if ret != C::KERN_SUCCESS as i32 {
         return Err(Error::FFIError(format!("host_page_size failed: {}", ret)));
     }
 

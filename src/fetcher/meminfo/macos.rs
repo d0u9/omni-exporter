@@ -7,16 +7,6 @@ use super::super::FetcherMetricName;
 
 pub type MeminfoMetric = FetcherMetric<MeminfoMetricNames>;
 
-impl MeminfoMetric {
-    pub fn new(name: MeminfoMetricNames, value: u64) -> Self {
-        Self {
-            name,
-            value: value.into(),
-            labels: None,
-        }
-    }
-}
-
 pub struct MeminfoInner;
 
 impl MeminfoInner {
