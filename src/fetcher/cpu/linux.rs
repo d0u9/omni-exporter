@@ -4,6 +4,7 @@ use tokio::sync::RwLock;
 
 use crate::error::Result;
 use crate::metric::Label;
+use crate::metric::MetricValue;
 use crate::procfs::fs;
 use crate::procfs::stat::CPUStat;
 
@@ -27,30 +28,144 @@ impl CPUInner {
     }
 
     pub async fn update(&self) -> Result<Vec<CpuMetric>> {
-        let metrics = vec![self.update_stat().await?];
+        let metrics = vec![self.update_stat().await?, self.update_online().await?];
         Ok(metrics.into_iter().flatten().collect())
     }
+}
 
+#[derive(Debug, PartialEq, Clone)]
+pub enum CpuMetricNames {
+    // CPU stat
+    User,
+    Nice,
+    System,
+    Idle,
+    Iowait,
+    Irq,
+    Softirq,
+    Steal,
+
+    // CPU online
+    Online,
+}
+
+impl FetcherMetricName for CpuMetricNames {
+    fn to_str(&self) -> &'static str {
+        match self {
+            // CPU stat
+            CpuMetricNames::User => "user",
+            CpuMetricNames::Nice => "nice",
+            CpuMetricNames::System => "system",
+            CpuMetricNames::Idle => "idle",
+            CpuMetricNames::Iowait => "iowait",
+            CpuMetricNames::Irq => "irq",
+            CpuMetricNames::Softirq => "softirq",
+            CpuMetricNames::Steal => "steal",
+
+            // CPU online
+            CpuMetricNames::Online => "online",
+        }
+    }
+}
+
+impl AsRef<str> for CpuMetricNames {
+    fn as_ref(&self) -> &str {
+        self.to_str()
+    }
+}
+
+impl From<CpuMetricNames> for &'static str {
+    fn from(name: CpuMetricNames) -> Self {
+        name.to_str()
+    }
+}
+
+////////////////////////////////////////////////////////////
+/// Stat
+////////////////////////////////////////////////////////////
+
+impl CPUInner {
     async fn update_stat(&self) -> Result<Vec<CpuMetric>> {
         let m = self.procfs.stat().await?;
         self.update_cpu_stats(m.cpu).await;
 
         let stats = self.cpu_status.read().await;
 
-        fn metric(n: &usize, stat: &CPUStat) -> Vec<CpuMetric> {
-            vec![CpuMetric::new_with_labels(
-                CpuMetricNames::CpuTotal,
+        let metrics = stats
+            .iter()
+            .flat_map(|(i, n)| Self::metric_stat(i, n))
+            .collect();
+
+        Ok(metrics)
+    }
+
+    fn metric_stat(n: &usize, stat: &CPUStat) -> Vec<CpuMetric> {
+        vec![
+            CpuMetric::new_with_labels(
+                CpuMetricNames::User,
                 stat.user,
                 vec![
                     Label::new("cpu", n.to_string()),
                     Label::new("mode", "user".to_string()),
                 ],
-            )]
-        }
-
-        let metrics = stats.iter().flat_map(|(i, n)| metric(i, n)).collect();
-
-        Ok(metrics)
+            ),
+            CpuMetric::new_with_labels(
+                CpuMetricNames::Nice,
+                stat.nice,
+                vec![
+                    Label::new("cpu", n.to_string()),
+                    Label::new("mode", "nice".to_string()),
+                ],
+            ),
+            CpuMetric::new_with_labels(
+                CpuMetricNames::System,
+                stat.system,
+                vec![
+                    Label::new("cpu", n.to_string()),
+                    Label::new("mode", "system".to_string()),
+                ],
+            ),
+            CpuMetric::new_with_labels(
+                CpuMetricNames::Idle,
+                stat.idle,
+                vec![
+                    Label::new("cpu", n.to_string()),
+                    Label::new("mode", "idle".to_string()),
+                ],
+            ),
+            CpuMetric::new_with_labels(
+                CpuMetricNames::Iowait,
+                stat.iowait,
+                vec![
+                    Label::new("cpu", n.to_string()),
+                    Label::new("mode", "iowait".to_string()),
+                ],
+            ),
+            CpuMetric::new_with_labels(
+                CpuMetricNames::Irq,
+                stat.irq,
+                vec![
+                    Label::new("cpu", n.to_string()),
+                    Label::new("mode", "irq".to_string()),
+                ],
+            ),
+            CpuMetric::new_with_labels(
+                CpuMetricNames::Softirq,
+                stat.softirq,
+                vec![
+                    Label::new("cpu", n.to_string()),
+                    Label::new("mode", "softirq".to_string()),
+                ],
+            ),
+            CpuMetric::new_with_labels(
+                CpuMetricNames::Steal,
+                stat.steal,
+                vec![
+                    Label::new("cpu", n.to_string()),
+                    Label::new("mode", "steal".to_string()),
+                ],
+            ),
+        ]
     }
 
     async fn update_cpu_stats(&self, new_status: HashMap<usize, CPUStat>) {
@@ -187,28 +302,17 @@ impl CPUInner {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub enum CpuMetricNames {
-    CpuTotal,
-}
+////////////////////////////////////////////////////////////
+/// Online
+////////////////////////////////////////////////////////////
 
-impl FetcherMetricName for CpuMetricNames {
-    fn to_str(&self) -> &'static str {
-        match self {
-            CpuMetricNames::CpuTotal => "cpu_total",
-        }
-    }
-}
-
-impl AsRef<str> for CpuMetricNames {
-    fn as_ref(&self) -> &str {
-        self.to_str()
-    }
-}
-
-impl From<CpuMetricNames> for &'static str {
-    fn from(name: CpuMetricNames) -> Self {
-        name.to_str()
+impl CPUInner {
+    pub async fn update_online(&self) -> Result<Vec<CpuMetric>> {
+        Ok(vec![CpuMetric::new_with_labels(
+            CpuMetricNames::Online,
+            MetricValue::from(true),
+            vec![Label::new("cpu", "0".to_string())],
+        )])
     }
 }
 

@@ -85,6 +85,12 @@ impl From<f64> for MetricValue {
     }
 }
 
+impl From<bool> for MetricValue {
+    fn from(value: bool) -> Self {
+        MetricValue::U64(value as u64)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Metric {
     family: Option<MetricFamily>,
