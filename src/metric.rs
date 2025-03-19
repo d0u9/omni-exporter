@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
 // https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum Timestamp {
     U64(u64),
     Duration(Duration),
@@ -52,7 +52,7 @@ impl From<Timestamp> for Option<u64> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum MetricValue {
     U64(u64),
     F64(f64),
@@ -95,7 +95,7 @@ impl From<bool> for MetricValue {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metric {
     family: Option<MetricFamily>,
     labels: Vec<Label>,
@@ -281,7 +281,7 @@ impl From<Vec<&'static str>> for LabelKeySet {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Label {
     pub key: LabelKey,
     pub value: LabelValue,
@@ -369,7 +369,7 @@ impl MetricFamily {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct Metrics(Vec<Metric>);
 
 impl Metrics {
