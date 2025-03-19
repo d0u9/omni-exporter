@@ -8,6 +8,7 @@ pub enum Error {
     FFIError(String),
     CustomError(String),
     ProcfsError(String),
+    LabelKeyAlreadyExists(String),
 }
 
 impl fmt::Display for Error {
@@ -19,6 +20,7 @@ impl fmt::Display for Error {
             Error::CustomError(ref err) => write!(f, "Error: {}", err),
             Error::FFIError(ref err) => write!(f, "FFI error: {}", err),
             Error::ProcfsError(ref err) => write!(f, "Procfs error: {}", err),
+            Error::LabelKeyAlreadyExists(ref key) => write!(f, "Label key already exists: {}", key),
         }
     }
 }

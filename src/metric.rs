@@ -1,6 +1,8 @@
 use std::borrow::Cow;
 use std::time::Duration;
 
+use crate::error::Error;
+
 use serde::{Deserialize, Serialize};
 
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
@@ -137,7 +139,10 @@ impl Metric {
         K: Into<LabelKey>,
         V: Into<LabelValue>,
     {
-        self.labels.push(Label { key: key.into(), value: value.into() });
+        self.labels.push(Label {
+            key: key.into(),
+            value: value.into(),
+        });
     }
 }
 
@@ -150,8 +155,126 @@ pub enum MetricType {
     Untyped,
 }
 
-type LabelKey = String;
-type LabelValue = String;
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct LabelKey {
+    inner: Cow<'static, str>,
+}
+
+impl From<String> for LabelKey {
+    fn from(value: String) -> Self {
+        Self {
+            inner: Cow::Owned(value),
+        }
+    }
+}
+
+impl From<&'static str> for LabelKey {
+    fn from(value: &'static str) -> Self {
+        Self {
+            inner: Cow::Borrowed(value),
+        }
+    }
+}
+
+impl Into<String> for LabelKey {
+    fn into(self) -> String {
+        self.inner.into_owned()
+    }
+}
+
+impl AsRef<str> for LabelKey {
+    fn as_ref(&self) -> &str {
+        self.inner.as_ref()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct LabelValue {
+    inner: Cow<'static, str>,
+}
+
+impl From<String> for LabelValue {
+    fn from(value: String) -> Self {
+        Self {
+            inner: Cow::Owned(value),
+        }
+    }
+}
+
+impl From<&'static str> for LabelValue {
+    fn from(value: &'static str) -> Self {
+        Self {
+            inner: Cow::Borrowed(value),
+        }
+    }
+}
+
+impl Into<String> for LabelValue {
+    fn into(self) -> String {
+        self.inner.into_owned()
+    }
+}
+
+impl AsRef<str> for LabelValue {
+    fn as_ref(&self) -> &str {
+        self.inner.as_ref()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+// I want this can be used in no_std environment
+#[serde(transparent)]
+pub struct LabelKeySet {
+    inner: Vec<LabelKey>,
+}
+
+impl LabelKeySet {
+    pub fn new() -> Self {
+        Self { inner: Vec::new() }
+    }
+
+    pub fn push(mut self, key: LabelKey) -> Result<Self, Error> {
+        if self.inner.contains(&key) {
+            return Err(Error::LabelKeyAlreadyExists(key.into()));
+        }
+
+        self.inner.push(key);
+
+        Ok(self)
+    }
+
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    pub fn contains(&self, key: &str) -> bool {
+        self.inner.iter().any(|k| k.as_ref() == key)
+    }
+}
+
+impl<T> FromIterator<T> for LabelKeySet
+where
+    T: Into<LabelKey>,
+{
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        Self {
+            inner: iter.into_iter().map(|s| s.into()).collect(),
+        }
+    }
+}
+
+impl<T> From<T> for LabelKeySet
+where
+    T: IntoIterator<Item = String>,
+{
+    fn from(value: T) -> Self {
+        Self {
+            inner: value.into_iter().map(|s| s.into()).collect(),
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Label {
@@ -165,7 +288,10 @@ impl Label {
         K: Into<LabelKey>,
         V: Into<LabelValue>,
     {
-        Self { key: key.into(), value: value.into() }
+        Self {
+            key: key.into(),
+            value: value.into(),
+        }
     }
 }
 
@@ -175,7 +301,7 @@ pub struct MetricFamily {
     name: Cow<'static, str>,
     help: Cow<'static, str>,
     metric_type: MetricType,
-    label_set: Cow<'static, Vec<String>>,
+    label_set: Cow<'static, LabelKeySet>,
 }
 
 impl MetricFamily {
@@ -185,12 +311,12 @@ impl MetricFamily {
         help: &'static str,
         metric_type: MetricType,
         label_set: L,
-    ) -> Self 
+    ) -> Self
     where
         S: Into<String>,
         N: Into<String>,
         L: IntoIterator<Item = I>,
-        I: Into<String>,
+        I: Into<LabelKey>,
     {
         Self {
             namespace: Some(Cow::Owned(namespace.into())),
@@ -201,17 +327,12 @@ impl MetricFamily {
         }
     }
 
-    pub fn new<N, H, L, I>(
-        name: N,
-        help: H,
-        metric_type: MetricType,
-        label_set: L,
-    ) -> Self 
+    pub fn new<N, H, L, I>(name: N, help: H, metric_type: MetricType, label_set: L) -> Self
     where
         N: Into<String>,
         H: Into<String>,
         L: IntoIterator<Item = I>,
-        I: Into<String>,
+        I: Into<LabelKey>,
     {
         Self {
             namespace: None,
@@ -241,7 +362,7 @@ impl MetricFamily {
         // Remove all unknown labels from the metric
         metric
             .labels
-            .retain(|label| self.label_set.contains(&label.key.to_string()));
+            .retain(|label| self.label_set.contains(&label.key.as_ref().to_string()));
     }
 }
 
