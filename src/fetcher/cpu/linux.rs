@@ -50,7 +50,7 @@ pub enum CpuMetricNames {
     Online,
 }
 
-impl FetcherMetricName for CpuMetricNames {
+impl CpuMetricNames {
     fn to_str(&self) -> &'static str {
         match self {
             // CPU stat
@@ -66,6 +66,12 @@ impl FetcherMetricName for CpuMetricNames {
             // CPU online
             CpuMetricNames::Online => "online",
         }
+    }
+}
+
+impl FetcherMetricName for CpuMetricNames {
+    fn to_str(&self) -> &'static str {
+        self.to_str()
     }
 }
 

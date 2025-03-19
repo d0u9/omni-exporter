@@ -21,6 +21,7 @@ impl Meminfo {
 
 #[cfg(test)]
 mod tests {
+    use super::super::MeminfoMetricNames;
     use super::*;
 
     #[tokio::test]

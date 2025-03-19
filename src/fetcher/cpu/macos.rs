@@ -1,4 +1,5 @@
 use crate::error::Result;
+use std::borrow::Cow;
 
 use super::super::FetcherMetric;
 use super::super::FetcherMetricName;
@@ -68,8 +69,8 @@ pub enum CpuMetricNames {
     Idle,
 }
 
-impl FetcherMetricName for CpuMetricNames {
-    fn to_str(&self) -> &'static str {
+impl CpuMetricNames {
+    pub fn to_str(&self) -> &'static str {
         match self {
             CpuMetricNames::User => "user",
             CpuMetricNames::System => "system",
@@ -79,15 +80,15 @@ impl FetcherMetricName for CpuMetricNames {
     }
 }
 
-impl AsRef<str> for CpuMetricNames {
-    fn as_ref(&self) -> &str {
+impl FetcherMetricName for CpuMetricNames {
+    fn to_str(&self) -> &'static str {
         self.to_str()
     }
 }
 
-impl From<CpuMetricNames> for &'static str {
+impl From<CpuMetricNames> for Cow<'static, str> {
     fn from(name: CpuMetricNames) -> Self {
-        name.to_str()
+        Cow::Borrowed(name.to_str())
     }
 }
 
