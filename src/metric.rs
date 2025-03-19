@@ -163,40 +163,48 @@ impl Label {
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct MetricFamily {
-    namespace: Option<&'static str>,
-    name: &'static str,
+    namespace: Option<Cow<'static, str>>,
+    name: Cow<'static, str>,
     help: Cow<'static, str>,
     metric_type: MetricType,
     label_set: &'static [&'static str],
 }
 
 impl MetricFamily {
-    pub fn new_with_namespace(
-        namespace: &'static str,
-        name: &'static str,
+    pub fn new_with_namespace<S, N>(
+        namespace: S,
+        name: N,
         help: &'static str,
         metric_type: MetricType,
         label_set: &'static [&'static str],
-    ) -> Self {
+    ) -> Self 
+    where
+        S: Into<String>,
+        N: Into<String>,
+    {
         Self {
-            namespace: Some(namespace),
-            name,
+            namespace: Some(Cow::Owned(namespace.into())),
+            name: Cow::Owned(name.into()),
             help: Cow::Borrowed(help),
             metric_type,
             label_set,
         }
     }
 
-    pub fn new(
-        name: &'static str,
-        help: &'static str,
+    pub fn new<N, H>(
+        name: N,
+        help: H,
         metric_type: MetricType,
         label_set: &'static [&'static str],
-    ) -> Self {
+    ) -> Self 
+    where
+        N: Into<String>,
+        H: Into<String>,
+    {
         Self {
             namespace: None,
-            name,
-            help: Cow::Borrowed(help),
+            name: Cow::Owned(name.into()),
+            help: Cow::Owned(help.into()),
             metric_type,
             label_set,
         }
@@ -204,9 +212,9 @@ impl MetricFamily {
 
     pub fn dup_with_help<T: ToString>(&self, help: T) -> Self {
         Self {
-            namespace: self.namespace,
-            name: self.name,
-            help: Cow::Owned(help.to_string()),
+            namespace: self.namespace.clone(),
+            name: self.name.clone(),
+            help: self.help.clone(),
             metric_type: self.metric_type,
             label_set: self.label_set,
         }
