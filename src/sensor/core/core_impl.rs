@@ -28,6 +28,12 @@ impl CoreReader {
     }
 }
 
+impl Default for CoreReader {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait]
 impl SensorReader for CoreReader {
     type Metrics = Metrics;

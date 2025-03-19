@@ -12,6 +12,12 @@ impl SysctlReader {
     }
 }
 
+impl Default for SysctlReader {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait]
 impl SensorReader for SysctlReader {
     type Metrics = Metrics;

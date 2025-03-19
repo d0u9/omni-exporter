@@ -19,6 +19,12 @@ impl Meminfo {
     }
 }
 
+impl Default for Meminfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::MeminfoMetricNames;

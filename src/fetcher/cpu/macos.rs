@@ -61,6 +61,12 @@ impl CPUInner {
     }
 }
 
+impl Default for CPUInner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum CpuMetricNames {
     User,

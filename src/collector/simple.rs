@@ -37,3 +37,9 @@ impl SimpleCollector {
         Ok(metrics)
     }
 }
+
+impl Default for SimpleCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}

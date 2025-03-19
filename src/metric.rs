@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
 // https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum Timestamp {
     U64(u64),
     Duration(Duration),
@@ -32,6 +32,10 @@ impl Timestamp {
             Self::None => None,
         }
     }
+
+    pub fn is_none(&self) -> bool {
+        *self == Self::None
+    }
 }
 
 impl From<Duration> for Timestamp {
@@ -49,6 +53,16 @@ impl From<u64> for Timestamp {
 impl From<Timestamp> for Option<u64> {
     fn from(timestamp: Timestamp) -> Self {
         timestamp.into_u64()
+    }
+}
+
+impl std::fmt::Debug for Timestamp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(s) = self.into_u64() {
+            write!(f, "{:?}", s)
+        } else {
+            write!(f, "null")
+        }
     }
 }
 
@@ -95,7 +109,7 @@ impl From<bool> for MetricValue {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Metric {
     family: Option<MetricFamily>,
     labels: Vec<Label>,
@@ -149,6 +163,28 @@ impl Metric {
     }
 }
 
+impl std::fmt::Debug for Metric {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[ ")?;
+
+        write!(
+            f,
+            "T({:?}), {:?}, {:?}, ",
+            self.timestamp, self.name, self.value,
+        )?;
+
+        if !self.labels.is_empty() {
+            write!(f, "{:?}, ", self.labels)?;
+        }
+
+        if let Some(ref family) = self.family {
+            write!(f, "{:?}, ", family)?;
+        }
+
+        write!(f, "]")
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum MetricType {
     Counter,
@@ -158,7 +194,7 @@ pub enum MetricType {
     Untyped,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct LabelKey {
     inner: Cow<'static, str>,
@@ -180,9 +216,15 @@ impl From<&'static str> for LabelKey {
     }
 }
 
-impl Into<String> for LabelKey {
-    fn into(self) -> String {
-        self.inner.into_owned()
+impl std::fmt::Debug for LabelKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.inner)
+    }
+}
+
+impl From<LabelKey> for String {
+    fn from(value: LabelKey) -> Self {
+        value.inner.into()
     }
 }
 
@@ -192,7 +234,7 @@ impl AsRef<str> for LabelKey {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct LabelValue {
     inner: Cow<'static, str>,
@@ -214,9 +256,15 @@ impl From<&'static str> for LabelValue {
     }
 }
 
-impl Into<String> for LabelValue {
-    fn into(self) -> String {
-        self.inner.into_owned()
+impl From<LabelValue> for String {
+    fn from(value: LabelValue) -> Self {
+        value.inner.into()
+    }
+}
+
+impl std::fmt::Debug for LabelValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.inner)
     }
 }
 
@@ -226,7 +274,7 @@ impl AsRef<str> for LabelValue {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 // I want this can be used in no_std environment
 #[serde(transparent)]
 pub struct LabelKeySet {
@@ -252,8 +300,18 @@ impl LabelKeySet {
         self.inner.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.inner.len() == 0
+    }
+
     pub fn contains(&self, key: &str) -> bool {
         self.inner.iter().any(|k| k.as_ref() == key)
+    }
+}
+
+impl Default for LabelKeySet {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -284,7 +342,23 @@ impl From<Vec<&'static str>> for LabelKeySet {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+impl std::fmt::Debug for LabelKeySet {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{ ")?;
+        self.inner
+            .iter()
+            .enumerate()
+            .try_for_each(|(i, label_key)| {
+                if i > 0 {
+                    write!(f, ", ")?;
+                }
+                write!(f, "{:?}", label_key)
+            })?;
+        write!(f, "}}")
+    }
+}
+
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct Label {
     pub key: LabelKey,
     pub value: LabelValue,
@@ -303,7 +377,13 @@ impl Label {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+impl std::fmt::Debug for Label {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({:?} : {:?})", self.key, self.value)
+    }
+}
+
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct MetricFamily {
     namespace: Option<Cow<'static, str>>,
     name: Cow<'static, str>,
@@ -368,7 +448,17 @@ impl MetricFamily {
         // Remove all unknown labels from the metric
         metric
             .labels
-            .retain(|label| self.label_set.contains(&label.key.as_ref().to_string()));
+            .retain(|label| self.label_set.contains(label.key.as_ref()));
+    }
+}
+
+impl std::fmt::Debug for MetricFamily {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "MetricFamily{{ ns: {:?}, name: {:?}, help: {:?}, type: {:?}: label_set: {:?} }}",
+            self.namespace, self.name, self.help, self.metric_type, self.label_set,
+        )
     }
 }
 
@@ -397,6 +487,12 @@ impl Metrics {
     }
 }
 
+impl Default for Metrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AsRef<Vec<Metric>> for Metrics {
     fn as_ref(&self) -> &Vec<Metric> {
         &self.0
@@ -413,30 +509,9 @@ impl std::fmt::Debug for Metrics {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Metrics: {{")?;
         for metric in &self.0 {
-            write!(f, "    {:?}, {:?}", metric.name, metric.value)?;
-            if let Some(ts) = metric.timestamp.into_u64() {
-                write!(f, ", {:?}", ts)?;
-            } else {
-                write!(f, ", NoTimestamp")?;
-            }
-            if !metric.labels.is_empty() {
-                write!(f, ", Labels: [")?;
-                for label in &metric.labels {
-                    write!(f, "{:?}: {:?}, ", label.key, label.value)?;
-                }
-                write!(f, "]")?;
-            }
-            if let Some(family) = &metric.family {
-                write!(
-                    f,
-                    ", Family: [{:?} {:?}, {:?}, {:?}]",
-                    family.namespace, family.name, family.help, family.metric_type
-                )?;
-            }
-            writeln!(f)?;
+            writeln!(f, "{:?}", metric)?;
         }
-        writeln!(f, "}}")?;
-        Ok(())
+        writeln!(f, "}}")
     }
 }
 
