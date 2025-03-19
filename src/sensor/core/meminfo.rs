@@ -24,7 +24,7 @@ impl Family {
                 Constants::FAMILY_NAME,
                 Constants::FAMILY_HELP_PREFIX,
                 MetricType::Gauge,
-                LabelKeys::list_all().iter().map(|s| *s),
+                LabelKeys::list_all(),
             )
         })
     }
@@ -37,7 +37,7 @@ impl Family {
                 Constants::FAMILY_NAME,
                 Constants::FAMILY_HELP_PREFIX,
                 MetricType::Counter,
-                LabelKeys::list_all().iter().map(|s| *s),
+                LabelKeys::list_all(),
             )
         })
     }

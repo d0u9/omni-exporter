@@ -265,11 +265,16 @@ where
     }
 }
 
-impl<T> From<T> for LabelKeySet
-where
-    T: IntoIterator<Item = String>,
-{
-    fn from(value: T) -> Self {
+impl<'a> From<&'a [&'static str]> for LabelKeySet {
+    fn from(value: &'a [&'static str]) -> Self {
+        Self {
+            inner: value.iter().map(|s| (*s).into()).collect(),
+        }
+    }
+}
+
+impl From<Vec<&'static str>> for LabelKeySet {
+    fn from(value: Vec<&'static str>) -> Self {
         Self {
             inner: value.into_iter().map(|s| s.into()).collect(),
         }
@@ -305,7 +310,7 @@ pub struct MetricFamily {
 }
 
 impl MetricFamily {
-    pub fn new_with_namespace<S, N, L, I>(
+    pub fn new_with_namespace<S, N, L>(
         namespace: S,
         name: N,
         help: &'static str,
@@ -315,42 +320,40 @@ impl MetricFamily {
     where
         S: Into<String>,
         N: Into<String>,
-        L: IntoIterator<Item = I>,
-        I: Into<LabelKey>,
+        L: Into<LabelKeySet>,
     {
         Self {
             namespace: Some(Cow::Owned(namespace.into())),
             name: Cow::Owned(name.into()),
             help: Cow::Borrowed(help),
             metric_type,
-            label_set: Cow::Owned(label_set.into_iter().map(|s| s.into()).collect()),
+            label_set: Cow::Owned(label_set.into()),
         }
     }
 
-    pub fn new<N, H, L, I>(name: N, help: H, metric_type: MetricType, label_set: L) -> Self
+    pub fn new<N, H, L>(name: N, help: H, metric_type: MetricType, label_set: L) -> Self
     where
-        N: Into<String>,
-        H: Into<String>,
-        L: IntoIterator<Item = I>,
-        I: Into<LabelKey>,
+        N: Into<Cow<'static, str>>,
+        H: Into<Cow<'static, str>>,
+        L: Into<LabelKeySet>,
     {
         Self {
             namespace: None,
-            name: Cow::Owned(name.into()),
-            help: Cow::Owned(help.into()),
+            name: name.into(),
+            help: help.into(),
             metric_type,
-            label_set: Cow::Owned(label_set.into_iter().map(|s| s.into()).collect()),
+            label_set: Cow::Owned(label_set.into()),
         }
     }
 
     pub fn dup_with_help<H>(&self, help: H) -> Self
     where
-        H: Into<String>,
+        H: Into<Cow<'static, str>>,
     {
         Self {
             namespace: self.namespace.clone(),
             name: self.name.clone(),
-            help: Cow::Owned(help.into()),
+            help: help.into(),
             metric_type: self.metric_type,
             label_set: self.label_set.clone(),
         }

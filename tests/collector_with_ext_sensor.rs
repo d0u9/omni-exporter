@@ -60,7 +60,7 @@ impl ExtSensorReader {
                 TEST_FAMILY,
                 TEST_HELP,
                 MetricType::Counter,
-                [TEST_LABEL1, TEST_LABEL2].iter().map(|s| *s),
+                [TEST_LABEL1, TEST_LABEL2].as_slice(),
             ),
             fetcher: MockFetcher::new(),
         }
