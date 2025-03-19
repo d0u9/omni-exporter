@@ -20,9 +20,11 @@ sysinfo = { version =  "0.33.1" }
 async-trait = "0.1"
 rand = "0.9.0"
 libc = "0.2"
+serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 env_logger = "0.11"
+serde_json = "1.0"
 
 [build-dependencies]
 bindgen = "*"

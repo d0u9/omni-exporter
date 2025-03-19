@@ -1,10 +1,12 @@
 use std::borrow::Cow;
 use std::time::Duration;
 
+use serde::Serialize;
+
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
 // https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub enum Timestamp {
     U64(u64),
     Duration(Duration),
@@ -48,7 +50,7 @@ impl From<Timestamp> for Option<u64> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub enum MetricValue {
     U64(u64),
     F64(f64),
@@ -91,7 +93,7 @@ impl From<bool> for MetricValue {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Metric {
     family: Option<MetricFamily>,
     labels: Vec<Label>,
@@ -135,7 +137,7 @@ impl Metric {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub enum MetricType {
     Counter,
     Gauge,
@@ -147,10 +149,10 @@ pub enum MetricType {
 type LabelKey = &'static str;
 type LabelValue = String;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Label {
-    key: LabelKey,
-    value: LabelValue,
+    pub key: LabelKey,
+    pub value: LabelValue,
 }
 
 impl Label {
@@ -159,7 +161,7 @@ impl Label {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct MetricFamily {
     namespace: Option<&'static str>,
     name: &'static str,
