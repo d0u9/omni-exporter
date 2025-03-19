@@ -24,7 +24,7 @@ impl Family {
                 Constants::FAMILY_NAME,
                 Constants::FAMILY_HELP_PREFIX,
                 MetricType::Gauge,
-                LabelKeys::list_all(),
+                LabelKeys::list_all().iter().map(|s| *s),
             )
         })
     }
@@ -37,7 +37,7 @@ impl Family {
                 Constants::FAMILY_NAME,
                 Constants::FAMILY_HELP_PREFIX,
                 MetricType::Counter,
-                LabelKeys::list_all(),
+                LabelKeys::list_all().iter().map(|s| *s),
             )
         })
     }
@@ -83,7 +83,7 @@ impl LabelKeys {
         }
     }
 
-    pub fn list_all() -> &'static [&'static str; 2] {
+    pub fn list_all() -> &'static [&'static str] {
         &[Self::LABEL1, Self::LABEL2]
     }
 }

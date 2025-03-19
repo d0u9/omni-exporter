@@ -15,7 +15,7 @@ fn test_metric() {
     assert_eq!(metric.timestamp, Timestamp::U64(1));
     assert!(metric.family.is_none());
 
-    let family = MetricFamily::new("test_family", "test_help", MetricType::Counter, &["a", "b"]);
+    let family = MetricFamily::new("test_family", "test_help", MetricType::Counter, vec!["a", "b"]);
     let mut metric = metric;
     family.tag_metric(&mut metric);
     assert!(metric.family.is_some());
@@ -25,7 +25,7 @@ fn test_metric() {
 #[test]
 fn test_metric_family() {
     let metric_family =
-        MetricFamily::new("test_family", "test_help", MetricType::Counter, &["a", "b"]);
+        MetricFamily::new("test_family", "test_help", MetricType::Counter, vec!["a", "b"]);
     assert_eq!(metric_family.label_set.len(), 2);
     assert_eq!(metric_family.help, "test_help");
     assert_eq!(metric_family.metric_type, MetricType::Counter);
@@ -55,7 +55,7 @@ fn test_metric_serialize() {
 #[test]
 fn test_metric_family_serialize() {
     let metric_family =
-        MetricFamily::new("test_family", "test_help", MetricType::Counter, &["a", "b"]);
+        MetricFamily::new("test_family", "test_help", MetricType::Counter, vec!["a", "b"]);
     let serialized = serde_json::to_string(&metric_family).unwrap();
     assert_eq!(
         serialized,
@@ -108,7 +108,7 @@ fn test_metric_serialize_with_timestamp() {
 #[test]
 fn test_metric_with_family() {
     let metric_family =
-        MetricFamily::new("test_family", "test_help", MetricType::Counter, &["a", "b"]);
+        MetricFamily::new("test_family", "test_help", MetricType::Counter, vec!["a", "b"]);
     let mut metric = Metric::new("test_metric", MetricValue::U64(10010));
     metric.set_timestamp(Timestamp::U64(10086));
     metric_family.tag_metric(&mut metric);

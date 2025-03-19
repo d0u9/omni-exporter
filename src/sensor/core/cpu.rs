@@ -38,7 +38,7 @@ mod cpu_family {
             }
         }
 
-        pub fn list_all() -> &'static [&'static str; 2] {
+        pub fn list_all() -> &'static [&'static str] {
             &[Self::CPU, Self::MODE]
         }
     }
@@ -51,7 +51,7 @@ mod cpu_family {
                 FAMILY_NAME,
                 FAMILY_HELP,
                 MetricType::Counter,
-                LabelKeys::list_all(),
+                LabelKeys::list_all().iter().map(|s| *s),
             )
         })
     }
@@ -97,7 +97,7 @@ mod online_family {
                 FAMILY_NAME,
                 FAMILY_HELP,
                 MetricType::Gauge,
-                LabelKeys::list_all(),
+                LabelKeys::list_all().iter().map(|s| *s),
             )
         })
     }

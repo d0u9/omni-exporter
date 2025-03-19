@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::time::Duration;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
 // https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md
@@ -132,12 +132,16 @@ impl Metric {
         self.timestamp = timestamp;
     }
 
-    pub fn add_label(&mut self, key: &'static str, value: String) {
-        self.labels.push(Label { key, value });
+    pub fn add_label<K, V>(&mut self, key: K, value: V)
+    where
+        K: Into<LabelKey>,
+        V: Into<LabelValue>,
+    {
+        self.labels.push(Label { key: key.into(), value: value.into() });
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum MetricType {
     Counter,
     Gauge,
@@ -146,7 +150,7 @@ pub enum MetricType {
     Untyped,
 }
 
-type LabelKey = &'static str;
+type LabelKey = String;
 type LabelValue = String;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -156,67 +160,78 @@ pub struct Label {
 }
 
 impl Label {
-    pub fn new(key: LabelKey, value: LabelValue) -> Self {
-        Self { key, value }
+    pub fn new<K, V>(key: K, value: V) -> Self
+    where
+        K: Into<LabelKey>,
+        V: Into<LabelValue>,
+    {
+        Self { key: key.into(), value: value.into() }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MetricFamily {
     namespace: Option<Cow<'static, str>>,
     name: Cow<'static, str>,
     help: Cow<'static, str>,
     metric_type: MetricType,
-    label_set: &'static [&'static str],
+    label_set: Cow<'static, Vec<String>>,
 }
 
 impl MetricFamily {
-    pub fn new_with_namespace<S, N>(
+    pub fn new_with_namespace<S, N, L, I>(
         namespace: S,
         name: N,
         help: &'static str,
         metric_type: MetricType,
-        label_set: &'static [&'static str],
+        label_set: L,
     ) -> Self 
     where
         S: Into<String>,
         N: Into<String>,
+        L: IntoIterator<Item = I>,
+        I: Into<String>,
     {
         Self {
             namespace: Some(Cow::Owned(namespace.into())),
             name: Cow::Owned(name.into()),
             help: Cow::Borrowed(help),
             metric_type,
-            label_set,
+            label_set: Cow::Owned(label_set.into_iter().map(|s| s.into()).collect()),
         }
     }
 
-    pub fn new<N, H>(
+    pub fn new<N, H, L, I>(
         name: N,
         help: H,
         metric_type: MetricType,
-        label_set: &'static [&'static str],
+        label_set: L,
     ) -> Self 
     where
         N: Into<String>,
         H: Into<String>,
+        L: IntoIterator<Item = I>,
+        I: Into<String>,
     {
         Self {
             namespace: None,
             name: Cow::Owned(name.into()),
             help: Cow::Owned(help.into()),
             metric_type,
-            label_set,
+            label_set: Cow::Owned(label_set.into_iter().map(|s| s.into()).collect()),
         }
     }
 
-    pub fn dup_with_help<T: ToString>(&self, help: T) -> Self {
+    pub fn dup_with_help<H>(&self, help: H) -> Self
+    where
+        H: Into<String>,
+    {
         Self {
             namespace: self.namespace.clone(),
             name: self.name.clone(),
-            help: self.help.clone(),
+            help: Cow::Owned(help.into()),
             metric_type: self.metric_type,
-            label_set: self.label_set,
+            label_set: self.label_set.clone(),
         }
     }
 
@@ -226,7 +241,7 @@ impl MetricFamily {
         // Remove all unknown labels from the metric
         metric
             .labels
-            .retain(|label| self.label_set.contains(&label.key));
+            .retain(|label| self.label_set.contains(&label.key.to_string()));
     }
 }
 
