@@ -5,7 +5,7 @@ use super::*;
 #[test]
 fn test_metric() {
     let metric = Metric {
-        name: "test_metric",
+        name: "test_metric".into(),
         value: MetricValue::U64(1),
         timestamp: Timestamp::U64(1),
         family: None,

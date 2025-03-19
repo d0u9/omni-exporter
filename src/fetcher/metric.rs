@@ -1,8 +1,8 @@
+use std::borrow::Cow;
+
 use crate::metric::{Label, MetricValue};
 
-pub trait FetcherMetricName:
-    AsRef<str> + Into<&'static str> + std::fmt::Debug + PartialEq + Clone
-{
+pub trait FetcherMetricName: Into<Cow<'static, str>> + std::fmt::Debug + PartialEq + Clone {
     fn to_str(&self) -> &'static str;
 }
 

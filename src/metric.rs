@@ -100,15 +100,18 @@ pub struct Metric {
     family: Option<MetricFamily>,
     labels: Vec<Label>,
 
-    pub name: &'static str,
+    pub name: Cow<'static, str>,
     pub value: MetricValue,
     pub timestamp: Timestamp,
 }
 
 impl Metric {
-    pub fn new(name: &'static str, value: MetricValue) -> Self {
+    pub fn new<N>(name: N, value: MetricValue) -> Self
+    where
+        N: Into<Cow<'static, str>>,
+    {
         Self {
-            name,
+            name: name.into(),
             value,
             timestamp: Timestamp::None,
             family: None,
@@ -116,17 +119,17 @@ impl Metric {
         }
     }
 
-    pub fn new_with_labels(
-        name: &'static str,
-        value: MetricValue,
-        labels: Option<Vec<Label>>,
-    ) -> Self {
+    pub fn new_with_labels<N, L>(name: N, value: MetricValue, labels: L) -> Self
+    where
+        N: Into<Cow<'static, str>>,
+        L: Into<Vec<Label>>,
+    {
         Self {
-            name,
+            name: name.into(),
             value,
             timestamp: Timestamp::None,
             family: None,
-            labels: labels.unwrap_or_default(),
+            labels: labels.into(),
         }
     }
 
@@ -369,7 +372,7 @@ impl MetricFamily {
     }
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Metrics(Vec<Metric>);
 
 impl Metrics {

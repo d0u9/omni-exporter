@@ -107,7 +107,7 @@ impl From<Vec<CpuMetric>> for Metrics {
     fn from(cpu: Vec<CpuMetric>) -> Self {
         Metrics::from_vec(
             cpu.into_iter()
-                .map(|m| Metric::new_with_labels(m.name.into(), m.value, m.labels))
+                .map(|m| Metric::new_with_labels(m.name, m.value, m.labels.unwrap_or_default()))
                 .collect(),
         )
     }

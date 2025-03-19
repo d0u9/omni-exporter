@@ -1,5 +1,6 @@
 use crate::error::Result;
 use crate::procfs::fs;
+use std::borrow::Cow;
 
 use super::super::FetcherMetric;
 use super::super::FetcherMetricName;
@@ -185,14 +186,8 @@ impl FetcherMetricName for MeminfoMetricNames {
     }
 }
 
-impl AsRef<str> for MeminfoMetricNames {
-    fn as_ref(&self) -> &str {
-        self.to_str()
-    }
-}
-
-impl From<MeminfoMetricNames> for &'static str {
+impl From<MeminfoMetricNames> for Cow<'static, str> {
     fn from(name: MeminfoMetricNames) -> Self {
-        name.to_str()
+        Cow::Borrowed(name.to_str())
     }
 }

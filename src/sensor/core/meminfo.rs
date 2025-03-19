@@ -93,7 +93,7 @@ impl From<Vec<MeminfoMetric>> for Metrics {
         Metrics::from_vec(
             meminfo
                 .into_iter()
-                .map(|m| Metric::new(m.name.into(), m.value))
+                .map(|m| Metric::new(m.name, m.value))
                 .collect(),
         )
     }

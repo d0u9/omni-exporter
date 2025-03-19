@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use tokio::sync::RwLock;
@@ -68,15 +69,9 @@ impl FetcherMetricName for CpuMetricNames {
     }
 }
 
-impl AsRef<str> for CpuMetricNames {
-    fn as_ref(&self) -> &str {
-        self.to_str()
-    }
-}
-
-impl From<CpuMetricNames> for &'static str {
+impl From<CpuMetricNames> for Cow<'static, str> {
     fn from(name: CpuMetricNames) -> Self {
-        name.to_str()
+        Cow::Borrowed(name.to_str())
     }
 }
 
