@@ -8,7 +8,7 @@ use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 use crate::procfs::internal::utils;
 
 use super::error::Result;
-use super::fs::FS;
+use super::fs::ProcFs;
 
 #[derive(Debug, Default)]
 pub struct Meminfo {
@@ -69,7 +69,7 @@ pub struct Meminfo {
     pub cma_free: Option<u64>,
 }
 
-impl FS {
+impl ProcFs {
     pub async fn meminfo(&self) -> Result<Meminfo> {
         let proc = self.proc.path(Path::new("meminfo"));
         let content = utils::read_file_no_stat(proc).await?;
@@ -157,9 +157,14 @@ impl FS {
     }
 }
 
-#[tokio::test]
-async fn test_meminfo() {
-    let fs = FS::new_default();
-    let meminfo = fs.meminfo().await.unwrap();
-    println!("{:?}", meminfo);
+#[cfg(test)]
+mod tests {
+    use crate::procfs;
+
+    #[tokio::test]
+    async fn test_meminfo() {
+        let fs = procfs::ProcFs::default();
+        let meminfo = fs.meminfo().await.unwrap();
+        println!("{:?}", meminfo);
+    }
 }

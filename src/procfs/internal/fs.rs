@@ -17,6 +17,7 @@ pub mod consts {
 
 // FS represents a pseudo-filesystem, normally /proc or /sys, which provides an
 // interface to kernel data structures.
+#[derive(Debug, Default)]
 pub struct FS {
     inner: PathBuf,
 }
@@ -29,5 +30,17 @@ impl FS {
 
     pub fn path<P: AsRef<Path>>(&self, p: P) -> PathBuf {
         self.inner.clone().join(p.as_ref())
+    }
+
+    pub fn join<P: AsRef<Path>>(&self, path: P) -> Self {
+        Self {
+            inner: self.inner.clone().join(path.as_ref()),
+        }
+    }
+}
+
+impl AsRef<Path> for FS {
+    fn as_ref(&self) -> &Path {
+        &self.inner
     }
 }

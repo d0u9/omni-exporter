@@ -1,19 +1,19 @@
 use crate::error::Result;
-use crate::procfs::fs;
 use std::borrow::Cow;
 
 use super::super::FetcherMetric;
 use super::super::FetcherMetricName;
+use crate::procfs;
 
 pub type MeminfoMetric = FetcherMetric<MeminfoMetricNames>;
 
 pub struct MeminfoInner {
-    procfs: fs::FS,
+    procfs: procfs::ProcFs,
 }
 
 impl MeminfoInner {
     pub fn new() -> Self {
-        let procfs = fs::FS::new_default();
+        let procfs = procfs::ProcFs::default();
         Self { procfs }
     }
 
@@ -127,7 +127,7 @@ pub enum MeminfoMetricNames {
 }
 
 impl MeminfoMetricNames {
-    pub fn to_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             MeminfoMetricNames::ActiveAnonBytes => "active_anon_bytes",
             MeminfoMetricNames::ActiveBytes => "active_bytes",
@@ -181,13 +181,13 @@ impl MeminfoMetricNames {
 }
 
 impl FetcherMetricName for MeminfoMetricNames {
-    fn to_str(&self) -> &'static str {
-        self.to_str()
+    fn as_str(&self) -> &'static str {
+        self.as_str()
     }
 }
 
 impl From<MeminfoMetricNames> for Cow<'static, str> {
     fn from(name: MeminfoMetricNames) -> Self {
-        Cow::Borrowed(name.to_str())
+        Cow::Borrowed(name.as_str())
     }
 }

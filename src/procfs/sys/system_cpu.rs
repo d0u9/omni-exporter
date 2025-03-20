@@ -7,21 +7,21 @@ use tokio::fs;
 
 use super::super::error::{Err, IOErr, Result};
 use super::super::internal::sysreadfile;
-use super::fs::FS;
+use super::SysFs;
 
 // CPU represents a path to a CPU located in `/sys/devices/system/cpu/cpu[0-9]*`.
 #[derive(Debug)]
 pub struct Cpu {
-    sys: PathBuf,
+    sys_path: PathBuf,
 }
 
 impl Cpu {
     pub fn new(path: PathBuf) -> Self {
-        Self { sys: path }
+        Self { sys_path: path }
     }
 
     pub fn number(&self) -> Option<usize> {
-        self.sys
+        self.sys_path
             .file_name()
             .and_then(|name| name.to_str())
             .and_then(|s| s.strip_prefix("cpu"))
@@ -29,7 +29,7 @@ impl Cpu {
     }
 
     pub async fn online(&self) -> Result<bool> {
-        let cpu_path = self.sys.join("online");
+        let cpu_path = self.sys_path.join("online");
         println!("{:?}", cpu_path);
         let online = sysreadfile::sys_read_file(cpu_path).await?;
         let online_str = String::from_utf8_lossy(&online);
@@ -49,7 +49,7 @@ impl Cpu {
     // Topology gets the topology information for a single CPU from `/sys/devices/system/cpu/cpuN/topology`.
     pub async fn topology(&self) -> Result<CpuTopology> {
         // cpu_topology_path is a directory
-        let cpu_topology_path = self.sys.join("topology");
+        let cpu_topology_path = self.sys_path.join("topology");
         if !cpu_topology_path.is_dir() {
             return Err(Err::IO(IOErr::NotDir(
                 cpu_topology_path.to_string_lossy().to_string(),
@@ -87,7 +87,7 @@ impl Cpu {
     // ThermalThrottle gets the cpu throttle count information for a single CPU from `/sys/devices/system/cpu/cpuN/thermal_throttle`.
     pub async fn thermal_throttle(&self) -> Result<CpuThermalThrottle> {
         // themal_path is a directory
-        let thermal_path = self.sys.join("thermal_throttle");
+        let thermal_path = self.sys_path.join("thermal_throttle");
         if !thermal_path.is_dir() {
             return Err(Err::IO(IOErr::NotDir(
                 thermal_path.to_string_lossy().to_string(),
@@ -109,11 +109,11 @@ impl Cpu {
     }
 }
 
-impl FS {
+impl SysFs {
     pub async fn cpus(&self) -> Result<Vec<Cpu>> {
         // Find files match this pattern: /sys/devices/system/cpu/cpu[0-9]*
-        let sys_path = "/sys/devices/system/cpu/";
-        let mut dir = fs::read_dir(sys_path).await?;
+        let sys = SysFs::default().join("devices/system/cpu");
+        let mut dir = fs::read_dir(sys).await?;
 
         let mut cpus: Vec<Cpu> = Vec::new();
         while let Some(entry) = dir.next_entry().await? {
@@ -161,7 +161,7 @@ pub struct SystemCpuFreqStats {
     pub cpuinfo_transition_table: Vec<Vec<u64>>,
 }
 
-impl FS {
+impl SysFs {
     // SystemCpufreq returns CPU frequency metrics for all CPUs.
     pub async fn system_cpufreq(&self) -> Result<Vec<SystemCpuFreqStats>> {
         Err(Err::NotImplemented)
@@ -175,14 +175,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_cpu_number() {
-        let fs = FS::default();
+        let fs = SysFs::default();
         let cpus = fs.cpus().await.unwrap();
         println!("{:?}", cpus);
     }
 
     #[tokio::test]
     async fn test_cpu_online() {
-        let fs = FS::default();
+        let fs = SysFs::default();
         let cpus = fs.cpus().await.unwrap();
         let onlline = match cpus[0].online().await {
             Ok(online) => online,
@@ -199,7 +199,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cpu_topology() {
-        let fs = FS::default();
+        let fs = SysFs::default();
         let cpus = fs.cpus().await.unwrap();
         for cpu in cpus {
             let topology = cpu.topology().await.unwrap();
@@ -209,7 +209,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cpu_thermal_throttle() {
-        let fs = FS::default();
+        let fs = SysFs::default();
         let cpus = fs.cpus().await.unwrap();
         for cpu in cpus {
             let thermal_throttle = cpu.thermal_throttle().await;

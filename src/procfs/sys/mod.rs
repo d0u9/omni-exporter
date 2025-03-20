@@ -1,4 +1,4 @@
 mod fs;
-pub use fs::FS;
+pub use fs::SysFs;
 
 mod system_cpu;

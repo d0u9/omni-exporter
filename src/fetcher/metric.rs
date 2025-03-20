@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use crate::metric::{Label, MetricValue};
 
 pub trait FetcherMetricName: Into<Cow<'static, str>> + std::fmt::Debug + PartialEq + Clone {
-    fn to_str(&self) -> &'static str;
+    fn as_str(&self) -> &'static str;
 }
 
 #[derive(Debug, PartialEq, Clone)]

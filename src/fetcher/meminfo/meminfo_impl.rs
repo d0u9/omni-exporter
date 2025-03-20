@@ -27,7 +27,6 @@ impl Default for Meminfo {
 
 #[cfg(test)]
 mod tests {
-    use super::super::MeminfoMetricNames;
     use super::*;
 
     #[tokio::test]
@@ -41,7 +40,7 @@ mod tests {
         assert!(
             metrics
                 .iter()
-                .any(|m| m.name == MeminfoMetricNames::FreeBytes)
+                .any(|m| m.name == super::super::MeminfoMetricNames::FreeBytes)
         );
 
         println!("{:?}", metrics);

@@ -11,7 +11,7 @@ use crate::procfs::internal::utils;
 use crate::procfs::proc_stat::USER_HZ;
 
 use super::error::{Err, Result};
-use super::fs::FS;
+use super::fs::ProcFs;
 
 // CPUStat shows how much time the cpu spend in various stages.
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -72,7 +72,7 @@ pub struct Stat {
     pub softirq: SoftIRQStat,
 }
 
-impl FS {
+impl ProcFs {
     pub async fn stat(&self) -> Result<Stat> {
         let file = self.proc.path(Path::new("stat"));
         let content = utils::read_file_no_stat(file).await?;
@@ -194,10 +194,15 @@ impl FS {
     }
 }
 
-#[tokio::test]
-async fn test_stat() {
-    let fs = FS::new_default();
-    let stat = fs.stat().await.unwrap();
-    println!("{:?}", stat.cpu);
-    println!("irq len: {:?}", stat.irq.len());
+#[cfg(test)]
+mod tests {
+    use crate::procfs;
+
+    #[tokio::test]
+    async fn test_stat() {
+        let fs = procfs::ProcFs::default();
+        let stat = fs.stat().await.unwrap();
+        println!("{:?}", stat.cpu);
+        println!("irq len: {:?}", stat.irq.len());
+    }
 }

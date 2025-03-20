@@ -6,8 +6,10 @@ use tokio::sync::RwLock;
 use crate::error::Result;
 use crate::metric::Label;
 use crate::metric::MetricValue;
-use crate::procfs::fs;
+use crate::procfs;
 use crate::procfs::stat::CPUStat;
+use crate::procfs::sys;
+use crate::procfs::{Err as ProcFsErr, IOErr as ProcFsIOErr};
 
 use super::super::FetcherMetric;
 use super::super::FetcherMetricName;
@@ -16,21 +18,34 @@ pub type CpuMetric = FetcherMetric<CpuMetricNames>;
 
 pub struct CPUInner {
     cpu_status: RwLock<HashMap<usize, CPUStat>>,
-    procfs: fs::FS,
+    procfs: procfs::ProcFs,
+    sys: sys::SysFs,
 }
 
 impl CPUInner {
     pub fn new() -> Self {
-        let procfs = fs::FS::new_default();
+        let procfs = procfs::ProcFs::default();
+        let sys = sys::SysFs::default();
         Self {
             procfs,
+            sys,
             cpu_status: RwLock::new(HashMap::new()),
         }
     }
 
     pub async fn update(&self) -> Result<Vec<CpuMetric>> {
-        let metrics = vec![self.update_stat().await?, self.update_online().await?];
+        let metrics = vec![
+            self.update_stat().await?,
+            self.update_online().await?,
+            self.update_topology().await?,
+        ];
         Ok(metrics.into_iter().flatten().collect())
+    }
+}
+
+impl Default for CPUInner {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -48,10 +63,16 @@ pub enum CpuMetricNames {
 
     // CPU online
     Online,
+
+    // CPU topology
+    CoreId,
+    CoreSiblingsList,
+    PhysicalPackageId,
+    ThreadSiblingsList,
 }
 
 impl CpuMetricNames {
-    fn to_str(&self) -> &'static str {
+    fn as_str(&self) -> &'static str {
         match self {
             // CPU stat
             CpuMetricNames::User => "user",
@@ -65,26 +86,31 @@ impl CpuMetricNames {
 
             // CPU online
             CpuMetricNames::Online => "online",
+
+            // CPU topology
+            CpuMetricNames::CoreId => "core_id",
+            CpuMetricNames::CoreSiblingsList => "core_siblings_list",
+            CpuMetricNames::PhysicalPackageId => "physical_package_id",
+            CpuMetricNames::ThreadSiblingsList => "thread_siblings_list",
         }
     }
 }
 
 impl FetcherMetricName for CpuMetricNames {
-    fn to_str(&self) -> &'static str {
-        self.to_str()
+    fn as_str(&self) -> &'static str {
+        self.as_str()
     }
 }
 
 impl From<CpuMetricNames> for Cow<'static, str> {
     fn from(name: CpuMetricNames) -> Self {
-        Cow::Borrowed(name.to_str())
+        Cow::Borrowed(name.as_str())
     }
 }
 
 ////////////////////////////////////////////////////////////
 /// Stat
 ////////////////////////////////////////////////////////////
-
 impl CPUInner {
     async fn update_stat(&self) -> Result<Vec<CpuMetric>> {
         let m = self.procfs.stat().await?;
@@ -306,14 +332,64 @@ impl CPUInner {
 ////////////////////////////////////////////////////////////
 /// Online
 ////////////////////////////////////////////////////////////
-
 impl CPUInner {
     pub async fn update_online(&self) -> Result<Vec<CpuMetric>> {
-        Ok(vec![CpuMetric::new_with_labels(
-            CpuMetricNames::Online,
-            MetricValue::from(true),
-            vec![Label::new("cpu", "0".to_string())],
-        )])
+        let cpus = self.sys.cpus().await?;
+
+        // No-op if the system does not support CPU online stats.
+        if let Err(ProcFsErr::IO(ProcFsIOErr::NotFound(_))) = cpus[0].online().await {
+            return Ok(vec![]);
+        }
+
+        let mut metrics = vec![];
+        for cpu in cpus {
+            let online = cpu.online().await?;
+            metrics.push(CpuMetric::new_with_labels(
+                CpuMetricNames::Online,
+                MetricValue::from(online),
+                vec![Label::new("cpu", cpu.number().unwrap_or(0).to_string())],
+            ));
+        }
+
+        Ok(metrics)
+    }
+}
+
+////////////////////////////////////////////////////////////
+/// Topology
+////////////////////////////////////////////////////////////
+impl CPUInner {
+    pub async fn update_topology(&self) -> Result<Vec<CpuMetric>> {
+        let cpus = self.sys.cpus().await?;
+
+        let mut metrics = vec![];
+        for cpu in cpus {
+            let topology = cpu.topology().await?;
+            metrics.extend(vec![
+                CpuMetric::new_with_labels(
+                    CpuMetricNames::CoreId,
+                    MetricValue::from(topology.core_id),
+                    vec![Label::new("cpu", cpu.number().unwrap_or(0).to_string())],
+                ),
+                CpuMetric::new_with_labels(
+                    CpuMetricNames::CoreSiblingsList,
+                    MetricValue::from(topology.core_siblings_list),
+                    vec![Label::new("cpu", cpu.number().unwrap_or(0).to_string())],
+                ),
+                CpuMetric::new_with_labels(
+                    CpuMetricNames::PhysicalPackageId,
+                    MetricValue::from(topology.physical_package_id),
+                    vec![Label::new("cpu", cpu.number().unwrap_or(0).to_string())],
+                ),
+                CpuMetric::new_with_labels(
+                    CpuMetricNames::ThreadSiblingsList,
+                    MetricValue::from(topology.thread_siblings_list),
+                    vec![Label::new("cpu", cpu.number().unwrap_or(0).to_string())],
+                ),
+            ]);
+        }
+
+        Ok(metrics)
     }
 }
 

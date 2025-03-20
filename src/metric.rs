@@ -66,10 +66,11 @@ impl std::fmt::Debug for Timestamp {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum MetricValue {
     U64(u64),
     F64(f64),
+    String(String),
     None,
 }
 
@@ -103,9 +104,21 @@ impl From<f64> for MetricValue {
     }
 }
 
+impl From<usize> for MetricValue {
+    fn from(value: usize) -> Self {
+        MetricValue::U64(value as u64)
+    }
+}
+
 impl From<bool> for MetricValue {
     fn from(value: bool) -> Self {
         MetricValue::U64(value as u64)
+    }
+}
+
+impl From<String> for MetricValue {
+    fn from(value: String) -> Self {
+        MetricValue::String(value)
     }
 }
 
