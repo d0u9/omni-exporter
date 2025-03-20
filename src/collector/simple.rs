@@ -16,6 +16,10 @@ impl SimpleCollector {
         self.sensors.push(sensor);
     }
 
+    pub fn add_ext_sensor(&mut self, sensor: Box<dyn SensorReader<Metrics = Metrics>>) {
+        self.sensors.push(Sensor::External(sensor));
+    }
+
     pub async fn collect(&self) -> Result<Metrics> {
         let mut metrics = Metrics::new();
         for sensor in &self.sensors {

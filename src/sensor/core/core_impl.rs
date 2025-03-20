@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 
+use crate::collector::Sensor;
 use crate::error::Result;
 use crate::metric::Metrics;
 use crate::sensor::SensorReader;
@@ -18,6 +19,10 @@ impl CoreReader {
             meminfo: meminfo::Meminfo::new(),
             cpu: cpu::Cpu::new(),
         }
+    }
+
+    pub fn new_sensor() -> Sensor {
+        Sensor::Core(Self::new())
     }
 
     async fn read_all(&self) -> Result<Metrics> {

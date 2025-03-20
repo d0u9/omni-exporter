@@ -1,14 +1,20 @@
+use async_trait::async_trait;
+
+use crate::collector::Sensor;
 use crate::error::Result;
 use crate::metric::MetricValue;
 use crate::metric::{Metric, Metrics};
 use crate::sensor::SensorReader;
-use async_trait::async_trait;
 
 pub struct SysctlReader;
 
 impl SysctlReader {
     pub fn new() -> Self {
         Self
+    }
+
+    pub fn new_sensor() -> Sensor {
+        Sensor::Sysctl(Self::new())
     }
 }
 

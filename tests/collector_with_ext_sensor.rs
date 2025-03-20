@@ -29,13 +29,13 @@ async fn collector_with_ext_sensor_test() {
     let mut collector = SimpleCollector::new();
 
     let sensor = ExtSensorReader::new();
-    collector.add_sensor(Sensor::External(Box::new(sensor)));
+    collector.add_ext_sensor(Box::new(sensor));
 
     let sensor = CoreReader::new();
     collector.add_sensor(Sensor::Core(sensor));
 
-    let sensor = SysctlReader::new();
-    collector.add_sensor(Sensor::Sysctl(sensor));
+    let sensor = SysctlReader::new_sensor();
+    collector.add_sensor(sensor);
 
     let metrics = collector.collect().await.unwrap();
 
