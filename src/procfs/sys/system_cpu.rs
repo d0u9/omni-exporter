@@ -1,6 +1,5 @@
 // https://github.com/prometheus/procfs/blob/master/sysfs/system_cpu.go
 
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use tokio::fs;
@@ -77,12 +76,14 @@ impl Cpu {
     }
 }
 
+#[cfg(feature = "no_implemented")]
 #[derive(Debug, Default)]
 pub struct CpuThermalThrottle {
     pub core_throttle_count: usize,
     pub package_throttle_count: usize,
 }
 
+#[cfg(feature = "no_implemented")]
 impl Cpu {
     // ThermalThrottle gets the cpu throttle count information for a single CPU from `/sys/devices/system/cpu/cpuN/thermal_throttle`.
     pub async fn thermal_throttle(&self) -> Result<CpuThermalThrottle> {
@@ -140,6 +141,7 @@ impl SysFs {
     }
 }
 
+#[cfg(feature = "no_implemented")]
 #[derive(Debug, Default)]
 pub struct SystemCpuFreqStats {
     pub name: String,
@@ -161,6 +163,7 @@ pub struct SystemCpuFreqStats {
     pub cpuinfo_transition_table: Vec<Vec<u64>>,
 }
 
+#[cfg(feature = "no_implemented")]
 impl SysFs {
     // SystemCpufreq returns CPU frequency metrics for all CPUs.
     pub async fn system_cpufreq(&self) -> Result<Vec<SystemCpuFreqStats>> {
@@ -208,6 +211,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "no_implemented")]
     async fn test_cpu_thermal_throttle() {
         let fs = SysFs::default();
         let cpus = fs.cpus().await.unwrap();
