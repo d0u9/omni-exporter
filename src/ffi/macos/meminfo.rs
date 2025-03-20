@@ -48,9 +48,6 @@ unsafe fn get_vmstat() -> Result<(u64, C::vm_statistics64_data_t)> {
 pub fn get_meminfo() -> Result<MemInfo> {
     let (page_size, vmstat) = unsafe { get_vmstat()? };
 
-    println!("page_size: {}", page_size);
-    println!("vmstat: {:?}", vmstat);
-
     Ok(MemInfo {
         page_size,
         active_bytes: vmstat.active_count as u64 * page_size,

@@ -4,6 +4,7 @@ use omni_exporter::collector::Sensor;
 use omni_exporter::collector::SimpleCollector;
 use omni_exporter::error::Result;
 use omni_exporter::metric::Metric;
+use omni_exporter::metric::MetricBatch;
 use omni_exporter::metric::MetricFamily;
 use omni_exporter::metric::MetricType;
 use omni_exporter::metric::MetricValue;
@@ -38,7 +39,9 @@ async fn collector_with_ext_sensor_test() {
 
     let metrics = collector.collect().await.unwrap();
 
-    log::info!("result: {:?}", metrics);
+    let batch = MetricBatch::from(metrics);
+
+    log::info!("result: {:?}", batch);
 }
 
 ////////////////////////////////////////////////////////////

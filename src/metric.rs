@@ -475,6 +475,74 @@ impl std::fmt::Debug for MetricFamily {
     }
 }
 
+#[derive(Clone, Default, Serialize, Deserialize)]
+pub struct MetricBatch {
+    pub metrics: Vec<Metric>,
+}
+
+impl MetricBatch {
+    pub fn iter_metrics(&self) -> impl Iterator<Item = &Metric> {
+        self.metrics.iter()
+    }
+
+    pub fn families(&self) -> impl Iterator<Item = &MetricFamily> {
+        let mut families = self
+            .metrics
+            .iter()
+            .filter_map(|m| m.family.as_ref())
+            .collect::<Vec<_>>();
+
+        families.sort_by_key(|f| f.name.as_ref());
+        families.dedup_by_key(|f| f.name.as_ref());
+
+        families.into_iter()
+    }
+
+    pub fn metrics_by_family(&self, family: &MetricFamily) -> impl Iterator<Item = &Metric> {
+        self.metrics
+            .iter()
+            .filter(|m| m.family.as_ref() == Some(family))
+    }
+
+    pub fn metrics_orphan(&self) -> impl Iterator<Item = &Metric> {
+        self.metrics.iter().filter(|m| m.family.is_none())
+    }
+}
+
+impl std::fmt::Debug for MetricBatch {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "MetricBatch: {{")?;
+
+        for family in self.families() {
+            writeln!(f, "Family: {:?}", family)?;
+
+            for metric in self.metrics_by_family(family) {
+                write!(f, "\t[ ")?;
+
+                write!(
+                    f,
+                    "T({:?}), {:?}, {:?}, ",
+                    metric.timestamp, metric.name, metric.value,
+                )?;
+
+                if !metric.labels.is_empty() {
+                    write!(f, "{:?}, ", metric.labels)?;
+                }
+
+                writeln!(f, "]")?;
+            }
+        }
+
+        writeln!(f, "}}")
+    }
+}
+
+impl From<Metrics> for MetricBatch {
+    fn from(metrics: Metrics) -> Self {
+        Self { metrics: metrics.0 }
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Metrics(Vec<Metric>);
 
