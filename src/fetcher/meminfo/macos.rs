@@ -63,7 +63,7 @@ pub enum MeminfoMetricNames {
 }
 
 impl MeminfoMetricNames {
-    pub fn to_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             MeminfoMetricNames::FreeBytes => "free_bytes",
             MeminfoMetricNames::ActiveBytes => "active_bytes",
@@ -82,13 +82,13 @@ impl MeminfoMetricNames {
 }
 
 impl FetcherMetricName for MeminfoMetricNames {
-    fn to_str(&self) -> &'static str {
-        self.to_str()
+    fn as_str(&self) -> &'static str {
+        self.as_str()
     }
 }
 
 impl From<MeminfoMetricNames> for Cow<'static, str> {
     fn from(name: MeminfoMetricNames) -> Self {
-        Cow::Borrowed(name.to_str())
+        Cow::Borrowed(name.as_str())
     }
 }

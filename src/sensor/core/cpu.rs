@@ -1,7 +1,6 @@
 use std::sync::OnceLock;
 
 use crate::error::Result;
-use crate::fetcher::FetcherMetricName;
 use crate::fetcher::cpu::CPU as Fetcher;
 use crate::fetcher::cpu::CpuMetric;
 use crate::fetcher::cpu::CpuMetricNames;
@@ -59,6 +58,7 @@ mod cpu_family {
     }
 }
 
+#[cfg(target_os = "linux")]
 mod online_family {
     use super::*;
 
@@ -104,6 +104,7 @@ mod online_family {
     }
 }
 
+#[cfg(target_os = "linux")]
 mod topology_family {
     use super::*;
 
@@ -185,7 +186,10 @@ impl Cpu {
         let fetcher = METRIC_FAMILY.get_or_init(Fetcher::new);
         Ok(fetcher)
     }
+}
 
+#[cfg(target_os = "linux")]
+impl Cpu {
     fn name_to_family(name: &str) -> &'static MetricFamily {
         match name {
             // CPU Stat
@@ -206,6 +210,23 @@ impl Cpu {
             _ if name == CpuMetricNames::CoreSiblingsList.as_str() => topology_family::family(),
             _ if name == CpuMetricNames::PhysicalPackageId.as_str() => topology_family::family(),
             _ if name == CpuMetricNames::ThreadSiblingsList.as_str() => topology_family::family(),
+
+            // The others
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+impl Cpu {
+    fn name_to_family(name: &str) -> &'static MetricFamily {
+        match name {
+            // CPU Stat
+            _ if name == CpuMetricNames::User.as_str() => cpu_family::family(),
+            _ if name == CpuMetricNames::Nice.as_str() => cpu_family::family(),
+            _ if name == CpuMetricNames::System.as_str() => cpu_family::family(),
+            _ if name == CpuMetricNames::Idle.as_str() => cpu_family::family(),
+            _ if name == CpuMetricNames::Nice.as_str() => cpu_family::family(),
 
             // The others
             _ => unreachable!(),

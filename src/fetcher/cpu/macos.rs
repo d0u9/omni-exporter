@@ -27,7 +27,7 @@ impl CPUInner {
                         cpu.user,
                         vec![
                             Label::new("cpu", i.to_string()),
-                            Label::new("mode", CpuMetricNames::User.to_str().to_string()),
+                            Label::new("mode", CpuMetricNames::User.as_str().to_string()),
                         ],
                     ),
                     FetcherMetric::new_with_labels(
@@ -35,7 +35,7 @@ impl CPUInner {
                         cpu.system,
                         vec![
                             Label::new("cpu", i.to_string()),
-                            Label::new("mode", CpuMetricNames::System.to_str().to_string()),
+                            Label::new("mode", CpuMetricNames::System.as_str().to_string()),
                         ],
                     ),
                     FetcherMetric::new_with_labels(
@@ -43,7 +43,7 @@ impl CPUInner {
                         cpu.nice,
                         vec![
                             Label::new("cpu", i.to_string()),
-                            Label::new("mode", CpuMetricNames::Nice.to_str().to_string()),
+                            Label::new("mode", CpuMetricNames::Nice.as_str().to_string()),
                         ],
                     ),
                     FetcherMetric::new_with_labels(
@@ -51,7 +51,7 @@ impl CPUInner {
                         cpu.idle,
                         vec![
                             Label::new("cpu", i.to_string()),
-                            Label::new("mode", CpuMetricNames::Idle.to_str().to_string()),
+                            Label::new("mode", CpuMetricNames::Idle.as_str().to_string()),
                         ],
                     ),
                 ]
@@ -76,7 +76,7 @@ pub enum CpuMetricNames {
 }
 
 impl CpuMetricNames {
-    pub fn to_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             CpuMetricNames::User => "user",
             CpuMetricNames::System => "system",
@@ -87,14 +87,14 @@ impl CpuMetricNames {
 }
 
 impl FetcherMetricName for CpuMetricNames {
-    fn to_str(&self) -> &'static str {
-        self.to_str()
+    fn as_str(&self) -> &'static str {
+        self.as_str()
     }
 }
 
 impl From<CpuMetricNames> for Cow<'static, str> {
     fn from(name: CpuMetricNames) -> Self {
-        Cow::Borrowed(name.to_str())
+        Cow::Borrowed(name.as_str())
     }
 }
 
