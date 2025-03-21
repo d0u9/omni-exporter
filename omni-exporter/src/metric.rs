@@ -533,6 +533,26 @@ impl std::fmt::Debug for MetricBatch {
             }
         }
 
+        if self.metrics_orphan().any(|_| true) {
+            writeln!(f, "Orphan: {{")?;
+            for metric in self.metrics_orphan() {
+                write!(f, "\t[ ")?;
+
+                write!(
+                    f,
+                    "T({:?}), {:?}, {:?}, ",
+                    metric.timestamp, metric.name, metric.value,
+                )?;
+
+                if !metric.labels.is_empty() {
+                    write!(f, "{:?}, ", metric.labels)?;
+                }
+
+                writeln!(f, "]")?;
+            }
+            writeln!(f, "}}")?;
+        }
+
         writeln!(f, "}}")
     }
 }
