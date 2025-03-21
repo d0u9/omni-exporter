@@ -1,10 +1,11 @@
 [workspace]
 resolver = "2"
 members = [
-  "omni-exporter"
+  "omni-exporter",
 
   # Internal
-, "procfs"]
+  "procfs",
+]
 
 [workspace.metadata.spellcheck]
 
