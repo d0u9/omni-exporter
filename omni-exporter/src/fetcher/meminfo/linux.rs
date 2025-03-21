@@ -1,9 +1,9 @@
-use crate::error::Result;
 use std::borrow::Cow;
+
+use crate::error::Result;
 
 use super::super::FetcherMetric;
 use super::super::FetcherMetricName;
-use crate::procfs;
 
 pub type MeminfoMetric = FetcherMetric<MeminfoMetricNames>;
 

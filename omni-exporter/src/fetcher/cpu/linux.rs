@@ -1,15 +1,14 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
+use procfs::stat::CPUStat;
+use procfs::sys;
+use procfs::{Err as ProcFsErr, IOErr as ProcFsIOErr};
 use tokio::sync::RwLock;
 
 use crate::error::Result;
 use crate::metric::Label;
 use crate::metric::MetricValue;
-use crate::procfs;
-use crate::procfs::stat::CPUStat;
-use crate::procfs::sys;
-use crate::procfs::{Err as ProcFsErr, IOErr as ProcFsIOErr};
 
 use super::super::FetcherMetric;
 use super::super::FetcherMetricName;

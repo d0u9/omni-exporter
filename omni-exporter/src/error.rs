@@ -30,8 +30,8 @@ impl std::error::Error for Error {}
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[cfg(target_os = "linux")]
-impl From<crate::procfs::Err> for Error {
-    fn from(err: crate::procfs::Err) -> Self {
+impl From<procfs::Err> for Error {
+    fn from(err: procfs::Err) -> Self {
         Error::ProcfsError(err.to_string())
     }
 }
