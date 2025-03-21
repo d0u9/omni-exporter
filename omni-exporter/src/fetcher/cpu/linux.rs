@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 
 use procfs::stat::CPUStat;
-use procfs::sys;
+use procfs::sysfs;
 use procfs::{Err as ProcFsErr, IOErr as ProcFsIOErr};
 use tokio::sync::RwLock;
 
@@ -18,13 +18,13 @@ pub type CpuMetric = FetcherMetric<CpuMetricNames>;
 pub struct CPUInner {
     cpu_status: RwLock<HashMap<usize, CPUStat>>,
     procfs: procfs::ProcFs,
-    sys: sys::SysFs,
+    sys: sysfs::SysFs,
 }
 
 impl CPUInner {
     pub fn new() -> Self {
         let procfs = procfs::ProcFs::default();
-        let sys = sys::SysFs::default();
+        let sys = sysfs::SysFs::default();
         Self {
             procfs,
             sys,

@@ -6,7 +6,7 @@ mod fs;
 #[cfg(target_os = "linux")]
 pub use fs::ProcFs;
 #[cfg(target_os = "linux")]
-pub mod sys;
+pub mod sysfs;
 
 #[cfg(target_os = "linux")]
 pub mod meminfo;
