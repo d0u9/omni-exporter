@@ -5,6 +5,7 @@ members = [
 
   # Internal
   "omni-exporter-procfs",
+  "omni-exporter-unsafe",
 ]
 
 [workspace.metadata.spellcheck]

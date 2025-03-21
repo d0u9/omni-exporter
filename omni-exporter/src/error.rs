@@ -35,3 +35,9 @@ impl From<procfs::Err> for Error {
         Error::ProcfsError(err.to_string())
     }
 }
+
+impl From<nosafe::Err> for Error {
+    fn from(err: nosafe::Err) -> Self {
+        Error::FFIError(err.to_string())
+    }
+}

@@ -9,7 +9,7 @@
 #![allow(unsafe_op_in_unsafe_fn)]
 #![allow(unknown_lints)]
 
-use crate::error::{Error, Result};
+use crate::{Err, Result};
 use std::io::{Cursor, Read};
 use std::mem;
 use std::slice;
@@ -36,10 +36,7 @@ unsafe fn do_get_cpu() -> Result<Vec<Cpu>> {
         )
     };
     if status != C::KERN_SUCCESS as i32 {
-        return Err(Error::FFIError(format!(
-            "host_processor_info failed: {}",
-            status
-        )));
+        return Err(Err::FFI(format!("host_processor_info failed: {}", status)));
     }
 
     let cpu_ticks = unsafe { slice::from_raw_parts(cpuload as *const u32, ncpu as usize * 4) };

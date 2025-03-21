@@ -3,8 +3,8 @@ use std::borrow::Cow;
 
 use super::super::FetcherMetric;
 use super::super::FetcherMetricName;
-use crate::ffi;
 use crate::metric::Label;
+use nosafe::ffi;
 
 pub type CpuMetric = FetcherMetric<CpuMetricNames>;
 

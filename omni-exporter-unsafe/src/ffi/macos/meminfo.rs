@@ -9,7 +9,7 @@
 
 extern crate libc;
 
-use crate::error::{Error, Result};
+use crate::{Err, Result};
 use std::mem;
 
 #[allow(clippy::all)]
@@ -30,16 +30,13 @@ unsafe fn get_vmstat() -> Result<(u64, C::vm_statistics64_data_t)> {
         )
     };
     if ret != C::KERN_SUCCESS as i32 {
-        return Err(Error::FFIError(format!(
-            "host_statistics64 failed: {}",
-            ret
-        )));
+        return Err(Err::FFI(format!("host_statistics64 failed: {}", ret)));
     }
 
     let mut page_size: C::vm_size_t = 0;
     let ret = unsafe { C::host_page_size(host, &mut page_size) };
     if ret != C::KERN_SUCCESS as i32 {
-        return Err(Error::FFIError(format!("host_page_size failed: {}", ret)));
+        return Err(Err::FFI(format!("host_page_size failed: {}", ret)));
     }
 
     Ok((page_size as u64, vmstat))

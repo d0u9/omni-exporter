@@ -7,7 +7,6 @@ authors = ["Douglas Su <doug.su.au@gmail.com>"]
 repository = "https://github.com/d0u9/omni-exporter"
 homepage = "https://github.com/d0u9/omni-exporter"
 readme = "README.md"
-build = "build/main.rs"
 description = """
 An exporter built for resource-constrained systems.
 """
@@ -15,17 +14,12 @@ An exporter built for resource-constrained systems.
 [dependencies]
 log = { version = "0.4" }
 tokio = { version = "1", features = ["rt", "macros", "sync", "fs", "io-util"] }
-async-trait = "0.1"
+async-trait = { version = "0.1" }
 serde = { version = "1.0.219", features = ["derive"] }
+nosafe = { package = "omni-exporter-unsafe", path = "../omni-exporter-unsafe" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 procfs = { package = "omni-exporter-procfs", path = "../omni-exporter-procfs" }
-
-[target.'cfg(target_os = "macos")'.dependencies]
-libc = "0.2"
-
-[target.'cfg(target_os = "macos")'.build-dependencies]
-bindgen = "*"
 
 [dev-dependencies]
 env_logger = "0.11"

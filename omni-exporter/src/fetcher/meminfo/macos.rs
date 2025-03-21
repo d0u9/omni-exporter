@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use crate::error::Result;
-use crate::ffi;
+use nosafe::ffi;
 
 use super::super::FetcherMetric;
 use super::super::FetcherMetricName;
