@@ -4,7 +4,7 @@ members = [
   "omni-exporter",
 
   # Internal
-  "procfs",
+  "omni-exporter-procfs",
 ]
 
 [workspace.metadata.spellcheck]

@@ -19,11 +19,10 @@ async-trait = "0.1"
 serde = { version = "1.0.219", features = ["derive"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-procfs = { path = "../procfs" }
+procfs = { package = "omni-exporter-procfs", path = "../omni-exporter-procfs" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 libc = "0.2"
-
 
 [target.'cfg(target_os = "macos")'.build-dependencies]
 bindgen = "*"
