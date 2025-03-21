@@ -182,8 +182,8 @@ impl Cpu {
     }
 
     fn fetcher() -> Result<&'static Fetcher> {
-        static METRIC_FAMILY: OnceLock<Fetcher> = OnceLock::new();
-        let fetcher = METRIC_FAMILY.get_or_init(Fetcher::new);
+        static METRIC_FETCHER: OnceLock<Fetcher> = OnceLock::new();
+        let fetcher = METRIC_FETCHER.get_or_init(Fetcher::new);
         Ok(fetcher)
     }
 }

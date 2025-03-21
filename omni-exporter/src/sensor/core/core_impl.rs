@@ -91,6 +91,7 @@ impl CoreReader {
                 CoreFetcher::Meminfo => metrics.extend(self.meminfo.get_meminfo().await?),
             }
         }
+
         Ok(Metrics::from_vec(metrics))
     }
 

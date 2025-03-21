@@ -396,7 +396,7 @@ impl std::fmt::Debug for Label {
     }
 }
 
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct MetricFamily {
     namespace: Option<Cow<'static, str>>,
     name: Cow<'static, str>,
@@ -462,6 +462,12 @@ impl MetricFamily {
         metric
             .labels
             .retain(|label| self.label_set.contains(label.key.as_ref()));
+    }
+}
+
+impl PartialEq for MetricFamily {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
     }
 }
 
