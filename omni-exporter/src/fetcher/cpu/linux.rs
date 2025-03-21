@@ -3,7 +3,6 @@ use std::collections::HashMap;
 
 use procfs::stat::CPUStat;
 use procfs::sysfs;
-use procfs::{Err as ProcFsErr, IOErr as ProcFsIOErr};
 use tokio::sync::RwLock;
 
 use crate::error::Result;
@@ -336,7 +335,7 @@ impl CPUInner {
         let cpus = self.sys.cpus().await?;
 
         // No-op if the system does not support CPU online stats.
-        if let Err(ProcFsErr::IO(ProcFsIOErr::NotFound(_))) = cpus[0].online().await {
+        if let Err(procfs::Err::IO(procfs::IOErr::NotFound(_))) = cpus[0].online().await {
             return Ok(vec![]);
         }
 

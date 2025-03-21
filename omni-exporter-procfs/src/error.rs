@@ -9,6 +9,8 @@ pub enum IOErr {
 
 #[derive(Debug)]
 pub enum Err {
+    Sysfs(String),
+    Procfs(String),
     ParseString(String),
     IO(IOErr),
     InvalidIndex(String),
@@ -20,6 +22,8 @@ impl fmt::Display for Err {
         match *self {
             Err::ParseString(ref err) => write!(f, "Parsing String Error: {}", err),
             Err::IO(ref err) => write!(f, "IO Error: {:?}", err),
+            Err::Sysfs(ref err) => write!(f, "Sysfs Error: {}", err),
+            Err::Procfs(ref err) => write!(f, "Procfs Error: {}", err),
             Err::InvalidIndex(ref err) => write!(f, "Invalid Index: {}", err),
             Err::NotImplemented => write!(f, "Not Implemented"),
         }

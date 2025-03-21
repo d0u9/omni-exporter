@@ -15,9 +15,5 @@ pub mod proc_stat;
 #[cfg(target_os = "linux")]
 pub mod stat;
 
-#[cfg(target_os = "linux")]
 mod error;
-#[cfg(target_os = "linux")]
-pub use error::Result;
-#[cfg(target_os = "linux")]
-pub use error::{Err, IOErr};
+pub use error::*;
