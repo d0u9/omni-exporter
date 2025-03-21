@@ -1,4 +1,6 @@
 mod core;
+pub use core::CoreFetcher;
+pub use core::CoreFetcherSelector;
 pub use core::CoreReader;
 
 mod sysctl;

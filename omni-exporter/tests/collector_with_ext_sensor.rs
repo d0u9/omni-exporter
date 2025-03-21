@@ -10,6 +10,8 @@ use omni_exporter::metric::MetricType;
 use omni_exporter::metric::MetricValue;
 use omni_exporter::metric::Metrics;
 use omni_exporter::metric::Timestamp;
+use omni_exporter::sensor::CoreFetcher;
+use omni_exporter::sensor::CoreFetcherSelector;
 use omni_exporter::sensor::CoreReader;
 use omni_exporter::sensor::SensorReader;
 use omni_exporter::sensor::SysctlReader;
@@ -31,7 +33,9 @@ async fn collector_with_ext_sensor_test() {
     let sensor = ExtSensorReader::new();
     collector.add_ext_sensor(Box::new(sensor));
 
-    let sensor = CoreReader::new();
+    let sensor = CoreReader::new_with_selector(
+        CoreFetcherSelector::new_disable_all().enable(CoreFetcher::Meminfo),
+    );
     collector.add_sensor(Sensor::Core(sensor));
 
     let sensor = SysctlReader::new_sensor();
