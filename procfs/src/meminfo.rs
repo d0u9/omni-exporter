@@ -5,7 +5,7 @@ use std::path::Path;
 
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 
-use crate::procfs::internal::utils;
+use crate::internal::utils;
 
 use super::error::Result;
 use super::fs::ProcFs;
@@ -159,11 +159,11 @@ impl ProcFs {
 
 #[cfg(test)]
 mod tests {
-    use crate::procfs;
+    use super::*;
 
     #[tokio::test]
     async fn test_meminfo() {
-        let fs = procfs::ProcFs::default();
+        let fs = ProcFs::default();
         let meminfo = fs.meminfo().await.unwrap();
         println!("{:?}", meminfo);
     }

@@ -1,7 +1,8 @@
-use crate::procfs::error::{Err, Result};
 use std::path::Path;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
+
+use crate::error::{Err, Result};
 
 mod consts {
     pub const SYS_FILE_BUFFER_SIZE: usize = 128;

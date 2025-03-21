@@ -7,8 +7,8 @@ use std::path::Path;
 
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 
-use crate::procfs::internal::utils;
-use crate::procfs::proc_stat::USER_HZ;
+use crate::internal::utils;
+use crate::proc_stat::USER_HZ;
 
 use super::error::{Err, Result};
 use super::fs::ProcFs;
@@ -196,11 +196,11 @@ impl ProcFs {
 
 #[cfg(test)]
 mod tests {
-    use crate::procfs;
+    use super::*;
 
     #[tokio::test]
     async fn test_stat() {
-        let fs = procfs::ProcFs::default();
+        let fs = ProcFs::default();
         let stat = fs.stat().await.unwrap();
         println!("{:?}", stat.cpu);
         println!("irq len: {:?}", stat.irq.len());

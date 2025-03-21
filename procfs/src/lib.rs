@@ -1,0 +1,23 @@
+#[cfg(target_os = "linux")]
+mod internal;
+
+#[cfg(target_os = "linux")]
+mod fs;
+#[cfg(target_os = "linux")]
+pub use fs::ProcFs;
+#[cfg(target_os = "linux")]
+pub mod sys;
+
+#[cfg(target_os = "linux")]
+pub mod meminfo;
+#[cfg(target_os = "linux")]
+pub mod proc_stat;
+#[cfg(target_os = "linux")]
+pub mod stat;
+
+#[cfg(target_os = "linux")]
+mod error;
+#[cfg(target_os = "linux")]
+pub use error::Result;
+#[cfg(target_os = "linux")]
+pub use error::{Err, IOErr};

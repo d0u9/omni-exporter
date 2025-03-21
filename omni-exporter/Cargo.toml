@@ -12,6 +12,9 @@ description = """
 An exporter built for resource-constrained systems.
 """
 
+[target.'cfg(target_os = "linux")'.dependencies]
+procfs = { path = "../procfs" }
+
 [dependencies]
 log = { version = "0.4" }
 tokio = { version = "1", features = ["rt", "macros", "sync", "fs", "io-util"] }
@@ -28,3 +31,6 @@ serde_json = "1.0"
 
 [build-dependencies]
 bindgen = "*"
+
+[lints]
+workspace = true
