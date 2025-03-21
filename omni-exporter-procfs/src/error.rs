@@ -30,18 +30,18 @@ impl std::error::Error for Err {}
 
 pub type Result<T> = std::result::Result<T, Err>;
 
-impl From<std::num::ParseIntError> for Err {
-    fn from(err: std::num::ParseIntError) -> Self {
-        Err::ParseString(err.to_string())
-    }
-}
-
 impl From<std::io::Error> for Err {
     fn from(err: std::io::Error) -> Self {
         match err.kind() {
             std::io::ErrorKind::NotFound => Err::IO(IOErr::NotFound(err.to_string())),
             _ => Err::IO(IOErr::Other(err.to_string())),
         }
+    }
+}
+
+impl From<std::num::ParseIntError> for Err {
+    fn from(err: std::num::ParseIntError) -> Self {
+        Err::ParseString(err.to_string())
     }
 }
 
