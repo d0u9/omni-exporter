@@ -113,7 +113,7 @@ impl Cpu {
 impl SysFs {
     pub async fn cpus(&self) -> Result<Vec<Cpu>> {
         // Find files match this pattern: /sys/devices/system/cpu/cpu[0-9]*
-        let sys = SysFs::default().join("devices/system/cpu");
+        let sys = self.sysfs.join("devices/system/cpu");
         let mut dir = fs::read_dir(sys).await?;
 
         let mut cpus: Vec<Cpu> = Vec::new();
