@@ -2,18 +2,10 @@
 mod internal;
 
 #[cfg(target_os = "linux")]
-mod fs;
-#[cfg(target_os = "linux")]
-pub use fs::ProcFs;
-#[cfg(target_os = "linux")]
-pub mod sysfs;
+pub mod proc;
 
 #[cfg(target_os = "linux")]
-pub mod meminfo;
-#[cfg(target_os = "linux")]
-pub mod proc_stat;
-#[cfg(target_os = "linux")]
-pub mod stat;
+pub mod sys;
 
 mod error;
 pub use error::*;

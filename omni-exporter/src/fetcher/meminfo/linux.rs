@@ -1,5 +1,7 @@
 use std::borrow::Cow;
 
+use procfs::proc;
+
 use crate::error::Result;
 
 use super::super::FetcherMetric;
@@ -8,12 +10,12 @@ use super::super::FetcherMetricName;
 pub type MeminfoMetric = FetcherMetric<MeminfoMetricNames>;
 
 pub struct MeminfoInner {
-    procfs: procfs::ProcFs,
+    procfs: proc::ProcFs,
 }
 
 impl MeminfoInner {
     pub fn new() -> Self {
-        let procfs = procfs::ProcFs::default();
+        let procfs = proc::ProcFs::default();
         Self { procfs }
     }
 

@@ -5,9 +5,9 @@ use std::path::Path;
 
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 
+use crate::Result;
 use crate::internal::utils;
 
-use super::error::Result;
 use super::fs::ProcFs;
 
 #[derive(Debug, Default)]

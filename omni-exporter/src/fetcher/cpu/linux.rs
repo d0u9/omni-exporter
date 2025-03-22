@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use procfs::stat::CPUStat;
-use procfs::sysfs;
+use procfs::proc;
+use procfs::sys;
 use tokio::sync::RwLock;
 
 use crate::error::Result;
@@ -15,15 +15,15 @@ use super::super::FetcherMetricName;
 pub type CpuMetric = FetcherMetric<CpuMetricNames>;
 
 pub struct CPUInner {
-    cpu_status: RwLock<HashMap<usize, CPUStat>>,
-    procfs: procfs::ProcFs,
-    sys: sysfs::SysFs,
+    cpu_status: RwLock<HashMap<usize, proc::CPUStat>>,
+    procfs: proc::ProcFs,
+    sys: sys::SysFs,
 }
 
 impl CPUInner {
     pub fn new() -> Self {
-        let procfs = procfs::ProcFs::default();
-        let sys = sysfs::SysFs::default();
+        let procfs = proc::ProcFs::default();
+        let sys = sys::SysFs::default();
         Self {
             procfs,
             sys,
@@ -124,7 +124,7 @@ impl CPUInner {
         Ok(metrics)
     }
 
-    fn metric_stat(n: &usize, stat: &CPUStat) -> Vec<CpuMetric> {
+    fn metric_stat(n: &usize, stat: &proc::CPUStat) -> Vec<CpuMetric> {
         vec![
             CpuMetric::new_with_labels(
                 CpuMetricNames::User,
@@ -193,7 +193,7 @@ impl CPUInner {
         ]
     }
 
-    async fn update_cpu_stats(&self, new_status: HashMap<usize, CPUStat>) {
+    async fn update_cpu_stats(&self, new_status: HashMap<usize, proc::CPUStat>) {
         let mut old_stats = self.cpu_status.write().await;
 
         for (i, n) in new_status.iter() {
@@ -206,7 +206,7 @@ impl CPUInner {
                     cpu_stats.idle,
                     n.idle
                 );
-                *cpu_stats = CPUStat::default();
+                *cpu_stats = proc::CPUStat::default();
             }
 
             if n.idle >= cpu_stats.idle {

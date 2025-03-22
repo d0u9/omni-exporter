@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use super::internal::fs;
+use crate::internal::fs;
 
 pub const DEFAULT_MOUNT_POINT: &str = fs::consts::DEFAULT_PROC_MOUNT_POINT;
 

@@ -8,10 +8,10 @@ use std::path::Path;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 
 use crate::internal::utils;
-use crate::proc_stat::USER_HZ;
+use crate::{Err, Result};
 
-use super::error::{Err, Result};
 use super::fs::ProcFs;
+use super::proc_stat::USER_HZ;
 
 // CPUStat shows how much time the cpu spend in various stages.
 #[derive(Default, Debug, Clone, PartialEq)]
