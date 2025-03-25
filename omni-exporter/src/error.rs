@@ -9,6 +9,7 @@ pub enum Error {
     CustomError(String),
     ProcfsError(String),
     LabelKeyAlreadyExists(String),
+    NotEnoughSpace(String),
 }
 
 impl fmt::Display for Error {
@@ -21,6 +22,7 @@ impl fmt::Display for Error {
             Error::FFIError(ref err) => write!(f, "FFI error: {}", err),
             Error::ProcfsError(ref err) => write!(f, "Procfs error: {}", err),
             Error::LabelKeyAlreadyExists(ref key) => write!(f, "Label key already exists: {}", key),
+            Error::NotEnoughSpace(ref err) => write!(f, "Not enough space: {}", err),
         }
     }
 }
