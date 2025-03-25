@@ -1,16 +1,15 @@
 use std::borrow::Cow;
 use std::time::Duration;
 
-use crate::error::Error;
-
 use serde::{Deserialize, Serialize};
+
+use crate::error::Error;
 
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
 // https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md
 
 #[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum Timestamp {
-    U64(u64),
     Duration(Duration),
     None,
 }
@@ -27,7 +26,6 @@ impl Timestamp {
 
     pub fn into_u64(self) -> Option<u64> {
         match self {
-            Self::U64(u64) => Some(u64),
             Self::Duration(d) => Some(d.as_secs()),
             Self::None => None,
         }
@@ -45,8 +43,8 @@ impl From<Duration> for Timestamp {
 }
 
 impl From<u64> for Timestamp {
-    fn from(u64: u64) -> Self {
-        Self::U64(u64)
+    fn from(secs: u64) -> Self {
+        Self::Duration(Duration::from_secs(secs))
     }
 }
 

@@ -7,12 +7,12 @@ fn test_metric() {
     let metric = Metric {
         name: "test_metric".into(),
         value: MetricValue::U64(1),
-        timestamp: Timestamp::U64(1),
+        timestamp: 1_u64.into(),
         family: None,
         labels: vec![],
     };
     assert_eq!(metric.value, MetricValue::U64(1));
-    assert_eq!(metric.timestamp, Timestamp::U64(1));
+    assert_eq!(metric.timestamp, 1_u64.into());
     assert!(metric.family.is_none());
 
     let family = MetricFamily::new(
@@ -103,7 +103,7 @@ fn test_metric_labels_serialize() {
 #[test]
 fn test_metric_serialize_with_timestamp() {
     let mut metric = Metric::new("test_metric", MetricValue::U64(10010));
-    metric.set_timestamp(Timestamp::U64(10086));
+    metric.set_timestamp(10086_u64.into());
     let serialized = serde_json::to_string(&metric).unwrap();
     assert_eq!(
         serialized,
@@ -112,7 +112,7 @@ fn test_metric_serialize_with_timestamp() {
             "labels": [],
             "name": "test_metric", 
             "value": {"U64": 10010},
-            "timestamp": {"U64": 10086}
+            "timestamp": {"Duration": {"secs": 10086, "nanos": 0}}
         }"#
         .replace(" ", "")
         .replace("\n", "")
@@ -128,7 +128,7 @@ fn test_metric_with_family() {
         vec!["a", "b"],
     );
     let mut metric = Metric::new("test_metric", MetricValue::U64(10010));
-    metric.set_timestamp(Timestamp::U64(10086));
+    metric.set_timestamp(10086_u64.into());
     metric_family.tag_metric(&mut metric);
     let serialized = serde_json::to_string(&metric).unwrap();
     assert_eq!(
@@ -144,7 +144,7 @@ fn test_metric_with_family() {
             "labels": [],
             "name": "test_metric",
             "value": {"U64": 10010},
-            "timestamp": {"U64": 10086}
+            "timestamp": {"Duration": {"secs": 10086, "nanos": 0}}
         }"#
         .replace(" ", "")
         .replace("\n", "")
