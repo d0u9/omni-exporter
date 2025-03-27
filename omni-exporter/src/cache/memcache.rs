@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::error::Error;
 
-use super::Stash;
+use super::MemSize;
 
 #[derive(Debug)]
 struct MemQueue<T> {
@@ -42,19 +42,19 @@ pub struct MemCacheInner<T> {
     data: T,
 }
 
-pub struct MemCache<T: Stash + Sized> {
+pub struct MemCache<T: MemSize + Sized> {
     mem_limit: usize,
     mem_used: usize,
     queue: MemQueue<MemCacheInner<T>>,
 }
 
-impl<T: Stash + Sized> Default for MemCache<T> {
+impl<T: MemSize + Sized> Default for MemCache<T> {
     fn default() -> Self {
         Self::new(usize::MAX)
     }
 }
 
-impl<T: Stash + Sized> MemCache<T> {
+impl<T: MemSize + Sized> MemCache<T> {
     pub fn new(max_mem: usize) -> Self {
         Self {
             mem_limit: max_mem,
@@ -142,7 +142,7 @@ impl<T: Stash + Sized> MemCache<T> {
 mod tests {
     use super::*;
 
-    impl Stash for u8 {
+    impl MemSize for u8 {
         fn sizeof(&self) -> usize {
             std::mem::size_of::<u8>()
         }
@@ -182,7 +182,7 @@ mod tests_big_struct {
         _space: [u8; 16],
     }
 
-    impl Stash for MyBigStruct {
+    impl MemSize for MyBigStruct {
         fn sizeof(&self) -> usize {
             std::mem::size_of::<MyBigStruct>()
         }

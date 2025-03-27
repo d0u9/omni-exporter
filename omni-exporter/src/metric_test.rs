@@ -150,3 +150,163 @@ fn test_metric_with_family() {
         .replace("\n", "")
     );
 }
+
+////////////////////////////////////////////////////////////
+/// MemSize
+////////////////////////////////////////////////////////////
+#[test]
+fn test_memsize_of_metric_family() {
+    println!(
+        "==> size_of::<MetricFamily>>(): {}",
+        size_of::<MetricFamily>()
+    );
+    println!(
+        "==> size_of::<LabelKeySet>>(): {}",
+        size_of::<LabelKeySet>()
+    );
+
+    let family = MetricFamily::new(
+        "test_family",
+        "test_help",
+        MetricType::Counter,
+        LabelKeySet::new(),
+    );
+    assert_eq!(
+        family.sizeof(),
+        size_of::<MetricFamily>() + // family
+        size_of::<Vec<LabelKey>>() + // label_set
+        0 // nothing
+    );
+    assert!(family.sizeof() >= size_of::<MetricFamily>());
+    println!("1 => family: {}", family.sizeof());
+
+    let family = MetricFamily::new(
+        "test_family",
+        "test_help",
+        MetricType::Counter,
+        LabelKeySet::from(vec!["aaaaa", "bbbbb"]),
+    );
+    assert_eq!(
+        family.sizeof(),
+        size_of::<MetricFamily>() + // family
+        size_of::<LabelKeySet>() + // label_set
+        2 * size_of::<LabelKey>() + // 2 label keys
+        0 // nothing
+    );
+    assert!(family.sizeof() >= size_of::<MetricFamily>());
+    println!("2 => family: {}", family.sizeof());
+
+    let family = MetricFamily::new(
+        "test_family",
+        "test_help",
+        MetricType::Counter,
+        LabelKeySet::from(vec!["aaaaa".to_string(), "bbbbb".to_string()]),
+    );
+    assert_eq!(
+        family.sizeof(),
+        size_of::<MetricFamily>() + // family
+        size_of::<LabelKeySet>() + // label_set
+        2 * size_of::<LabelKey>() + // 2 label keys
+        2 * (
+            size_of::<String>() + // 2 label strings
+            5 // 2 label values
+        ) +
+        0
+    );
+    assert!(family.sizeof() >= size_of::<MetricFamily>());
+    println!("3 => family: {}", family.sizeof());
+}
+
+#[test]
+fn test_memsize_of_metric() {
+    println!("==> size_of::<Metric>>(): {}", size_of::<Metric>());
+    println!(
+        "==> size_of::<LabelKeySet>>(): {}",
+        size_of::<LabelKeySet>()
+    );
+
+    // Empty metric
+    let metric = Metric::new("test_metric", MetricValue::U64(10010));
+    assert_eq!(
+        metric.sizeof(),
+        size_of::<Option<MetricFamily>>() + // family
+        size_of::<Vec<Label>>() + // labels
+        size_of::<Cow<'static, str>>() + // name
+        size_of::<MetricValue>() + // value
+        size_of::<Timestamp>() + // timestamp
+        0 // nothing
+    );
+    assert!(metric.sizeof() >= size_of::<Metric>());
+    println!("1 => metric: {}", metric.sizeof());
+
+    // Empty metric with family
+    let metric_family = MetricFamily::new(
+        "test_family",
+        "test_help",
+        MetricType::Counter,
+        LabelKeySet::from(vec!["aaaaa", "bbbbb"]),
+    );
+    let mut metric = Metric::new("test_metric", MetricValue::U64(10010));
+    metric_family.tag_metric(&mut metric);
+    assert_eq!(
+        metric.sizeof(),
+        size_of::<Option<MetricFamily>>() + // family
+        (metric_family.sizeof() - size_of_val(&metric_family)) + // family size
+        size_of::<Vec<Label>>() + // labels
+        size_of::<Cow<'static, str>>() + // name
+        size_of::<MetricValue>() + // value
+        size_of::<Timestamp>() + // timestamp
+        0 // nothing
+    );
+    assert!(metric.sizeof() >= size_of::<Metric>());
+    println!("2 => metric: {}", metric.sizeof());
+
+    // Empty metric with owned family
+    let metric_family = MetricFamily::new(
+        "test_family",
+        "test_help",
+        MetricType::Counter,
+        LabelKeySet::from(vec!["aaaaa".to_string(), "bbbbb".to_string()]),
+    );
+    let mut metric = Metric::new("test_metric", MetricValue::U64(10010));
+    metric_family.tag_metric(&mut metric);
+    assert_eq!(
+        metric.sizeof(),
+        size_of::<Option<MetricFamily>>() + // family
+        (metric_family.sizeof() - size_of_val(&metric_family)) + // family size
+        size_of::<Vec<Label>>() + // labels
+        size_of::<Cow<'static, str>>() + // name
+        size_of::<MetricValue>() + // value
+        size_of::<Timestamp>() + // timestamp
+        0 // nothing
+    );
+    assert!(metric.sizeof() >= size_of::<Metric>());
+    println!("3 => metric: {}", metric.sizeof());
+
+    // Empty metric with owned family and labels
+    let metric_family = MetricFamily::new(
+        "test_family",
+        "test_help",
+        MetricType::Counter,
+        LabelKeySet::from(vec!["aaaaa".to_string(), "bbbbb".to_string()]),
+    );
+    let mut metric = Metric::new("test_metric", MetricValue::U64(10010));
+    metric_family.tag_metric(&mut metric);
+    metric.add_label("aaaaa", "aa_value".to_string());
+    assert_eq!(
+        metric.sizeof(),
+        size_of::<Option<MetricFamily>>() + // family   
+        (metric_family.sizeof() - size_of_val(&metric_family)) + // family size
+        size_of::<Vec<Label>>() + // labels
+        (
+            size_of::<Cow<'static, str>>() + size_of::<String>() + 8 + // label keys
+            size_of::<Cow<'static, str>>() // label values
+        ) +
+        size_of::<Cow<'static, str>>() + // name
+        size_of::<MetricValue>() + // value
+        size_of::<Timestamp>() + // timestamp
+        0 // nothing
+    );
+    assert!(metric.sizeof() >= size_of::<Metric>());
+    println!("4 => metric: {}", metric.sizeof());
+}

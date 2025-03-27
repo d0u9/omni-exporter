@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
+use crate::cache::MemSize;
 use crate::error::Error;
 
 // This is a simple implementation of the Prometheus OpenMetrics Specification.
@@ -353,6 +354,14 @@ impl From<Vec<&'static str>> for LabelKeySet {
     }
 }
 
+impl From<Vec<String>> for LabelKeySet {
+    fn from(value: Vec<String>) -> Self {
+        Self {
+            inner: value.into_iter().map(|s| s.into()).collect(),
+        }
+    }
+}
+
 impl std::fmt::Debug for LabelKeySet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{{ ")?;
@@ -629,6 +638,100 @@ impl IntoIterator for Metrics {
     }
 }
 
+////////////////////////////////////////////////////////////
+/// MemSize
+////////////////////////////////////////////////////////////
+impl MemSize for Cow<'static, str> {
+    fn sizeof(&self) -> usize {
+        size_of_val(self)
+            + match self {
+                Cow::Borrowed(_) => 0,
+                Cow::Owned(s) => size_of_val(s) + s.capacity(),
+            }
+    }
+}
+
+impl MemSize for LabelKey {
+    fn sizeof(&self) -> usize {
+        self.inner.sizeof()
+    }
+}
+
+impl MemSize for LabelValue {
+    fn sizeof(&self) -> usize {
+        self.inner.sizeof()
+    }
+}
+
+impl MemSize for Label {
+    fn sizeof(&self) -> usize {
+        size_of_val(self)
+            + (self.key.sizeof() - size_of_val(&self.key))
+            + (self.value.sizeof() - size_of_val(&self.value))
+    }
+}
+
+impl MemSize for Option<Cow<'static, str>> {
+    fn sizeof(&self) -> usize {
+        size_of_val(self)
+            + match self {
+                Some(s) => s.sizeof() - size_of_val(s),
+                None => 0,
+            }
+    }
+}
+
+impl MemSize for LabelKeySet {
+    fn sizeof(&self) -> usize {
+        size_of_val(self) + self.inner.iter().map(|k| k.sizeof()).sum::<usize>()
+    }
+}
+
+impl MemSize for MetricFamily {
+    fn sizeof(&self) -> usize {
+        size_of_val(self)
+            + (self.namespace.sizeof() - size_of_val(&self.namespace))
+            + self.label_set.sizeof()
+            + 0
+    }
+}
+
+impl MemSize for Option<MetricFamily> {
+    fn sizeof(&self) -> usize {
+        size_of_val(self)
+            + match self {
+                Some(f) => f.sizeof() - size_of_val(f),
+                None => 0,
+            }
+    }
+}
+
+impl MemSize for MetricValue {
+    fn sizeof(&self) -> usize {
+        size_of_val(self)
+            + match self {
+                MetricValue::String(s) => s.capacity(),
+                _ => 0,
+            }
+    }
+}
+
+impl MemSize for Timestamp {
+    fn sizeof(&self) -> usize {
+        size_of_val(self)
+    }
+}
+
+impl MemSize for Metric {
+    fn sizeof(&self) -> usize {
+        size_of_val(self)
+            + (self.family.sizeof() - size_of_val(&self.family))
+            + (self.labels.iter().map(|l| l.sizeof()).sum::<usize>())
+            + (self.name.sizeof() - size_of_val(&self.name))
+            + (self.value.sizeof() - size_of_val(&self.value))
+            + (self.timestamp.sizeof() - size_of_val(&self.timestamp))
+    }
+}
 ////////////////////////////////////////////////////////////
 /// Unit Test
 ////////////////////////////////////////////////////////////
